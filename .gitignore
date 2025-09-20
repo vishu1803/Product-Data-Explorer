@@ -1,0 +1,38 @@
+# Dependencies (these folders are huge and unnecessary)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Production builds (can be recreated)
+dist/
+build/
+.next/
+
+# Environment variables (contain passwords - NEVER upload these!)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Database data (local database files)
+postgres-data/
+
+# IDE files (personal editor settings)
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Log files
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
