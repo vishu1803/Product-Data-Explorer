@@ -21,22 +21,25 @@ export interface Category {
 export interface Product {
   id: number;
   title: string;
+  originalTitle?: string;
   author?: string;
+  description?: string;
   price?: number;
   currency?: string;
-  imageUrl?: string;
-  description?: string;
-  isbn?: string;
   rating?: number;
   reviewCount: number;
-  worldOfBooksUrl?: string;
+  isbn?: string;
   isAvailable: boolean;
-  categoryId: number;
+  imageUrl?: string;
+  imageLocalPath?: string;
+  imageFilename?: string;
+  worldOfBooksUrl?: string;
+  condition?: string;
+  format?: string;
   category?: Category;
   createdAt: string;
   updatedAt: string;
 }
-
 export interface ProductsResponse {
   products: Product[];
   total: number;

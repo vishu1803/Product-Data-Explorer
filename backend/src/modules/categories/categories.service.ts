@@ -12,8 +12,8 @@ export class CategoriesService {
 
   async findAll(): Promise<Category[]> {
     return this.categoriesRepository.find({
-      where: { isActive: true },
       relations: ['products'],
+      order: { createdAt: 'DESC' },
     });
   }
 
@@ -29,47 +29,22 @@ export class CategoriesService {
     return this.categoriesRepository.save(category);
   }
 
-  // Fixed method to handle duplicates properly
-  async createFromScrapedData(scrapedData: {
-    name: string;
-    slug: string;
-    url: string;
-  }): Promise<Category> {
-    try {
-      // Check if category already exists by name OR slug
-      const existing = await this.categoriesRepository.findOne({
-        where: [{ name: scrapedData.name }, { slug: scrapedData.slug }],
-      });
+  async update(id: number, categoryData: Partial<Category>): Promise<Category | null> {
+    await this.categoriesRepository.update(id, categoryData);
+    return this.findOne(id);
+  }
 
-      if (existing) {
-        // Update existing category
-        existing.worldOfBooksUrl = scrapedData.url;
-        existing.isActive = true;
-        return this.categoriesRepository.save(existing);
-      }
+  async remove(id: number): Promise<void> {
+    await this.categoriesRepository.delete(id);
+  }
 
-      // Create new category
-      const category = this.categoriesRepository.create({
-        name: scrapedData.name,
-        slug: scrapedData.slug,
-        worldOfBooksUrl: scrapedData.url,
-        isActive: true,
-      });
-
-      return this.categoriesRepository.save(category);
-    } catch (error) {
-      // If we still get a duplicate error, try to find and return the existing one
-      if (error.message && error.message.includes('duplicate key')) {
-        const existing = await this.categoriesRepository.findOne({
-          where: [{ name: scrapedData.name }, { slug: scrapedData.slug }],
-        });
-
-        if (existing) {
-          return existing;
-        }
-      }
-
-      throw error;
-    }
+  // Helper method to generate slug from name
+  generateSlug(name: string): string {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
   }
 }

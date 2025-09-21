@@ -1,12 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, JoinColumn } from 'typeorm';
 import { Category } from '../categories/category.entity';
 
 @Entity('products')
@@ -14,52 +6,64 @@ export class Product {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'varchar', length: 500 })
   title: string;
 
-  @Column({ nullable: true })
-  author: string;
+  @Column({ type: 'varchar', length: 300, nullable: true })
+  originalTitle?: string;
 
-  @Column('decimal', { precision: 10, scale: 2, nullable: true })
-  price: number;
+  @Column({ type: 'varchar', length: 200, nullable: true })
+  author?: string;
 
-  @Column({ nullable: true })
-  currency: string;
+  @Column({ type: 'text', nullable: true })
+  description?: string;
 
-  @Column({ nullable: true })
-  imageUrl: string;
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  price?: number;
 
-  @Column('text', { nullable: true })
-  description: string;
+  @Column({ type: 'varchar', length: 10, nullable: true, default: 'GBP' })
+  currency?: string;
 
-  @Column({ nullable: true })
-  isbn: string;
+  @Column({ type: 'decimal', precision: 3, scale: 2, nullable: true })
+  rating?: number;
 
-  @Column('float', { nullable: true })
-  rating: number;
-
-  @Column({ default: 0 })
+  @Column({ type: 'int', default: 0 })
   reviewCount: number;
 
-  @Column({ nullable: true })
-  worldOfBooksUrl: string;
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  isbn?: string;
 
-  @Column({ default: true })
+  @Column({ type: 'boolean', default: true })
   isAvailable: boolean;
 
-  @ManyToOne(() => Category, (category) => category.products)
+  @Column({ type: 'text', nullable: true })
+  imageUrl?: string;
+
+  @Column({ type: 'text', nullable: true })
+  imageLocalPath?: string;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  imageFilename?: string;
+
+  @Column({ type: 'text', nullable: true })
+  worldOfBooksUrl?: string;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  condition?: string;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  format?: string;
+
+  @Column({ type: 'int' })
+  categoryId: number;
+
+  @ManyToOne(() => Category, category => category.products, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'categoryId' })
   category: Category;
-
-  @Column()
-  categoryId: number;
 
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
-
-  @Column({ type: 'timestamp', nullable: true })
-  lastScrapedAt: Date;
 }

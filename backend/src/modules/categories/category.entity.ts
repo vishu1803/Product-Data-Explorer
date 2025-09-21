@@ -1,11 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  OneToMany,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Product } from '../products/product.entity';
 
 @Entity('categories')
@@ -13,22 +6,19 @@ export class Category {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', length: 200 })
   name: string;
 
-  @Column()
-  slug: string;
+  @Column({ type: 'varchar', length: 250, nullable: true })
+  slug?: string;
 
-  @Column({ nullable: true })
-  description: string;
+  @Column({ type: 'text', nullable: true })
+  description?: string;
 
-  @Column({ nullable: true })
-  worldOfBooksUrl: string;
+  @Column({ type: 'text', nullable: true })
+  worldOfBooksUrl?: string;
 
-  @Column({ default: true })
-  isActive: boolean;
-
-  @OneToMany(() => Product, (product) => product.category)
+  @OneToMany(() => Product, product => product.category)
   products: Product[];
 
   @CreateDateColumn()

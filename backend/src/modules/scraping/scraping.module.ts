@@ -1,14 +1,16 @@
 import { Module } from '@nestjs/common';
-import { ScrapingService } from './scraping.service';
-import { WorldOfBooksScraper } from './world-of-books.scraper';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScrapingController } from './scraping.controller';
-import { CategoriesModule } from '../categories/categories.module';
-import { ProductsModule } from '../products/products.module';
+import { ScrapingService } from './scraping.service';
+import { Category } from '../categories/category.entity';
+import { Product } from '../products/product.entity';
 
 @Module({
-  imports: [CategoriesModule, ProductsModule],
+  imports: [
+    TypeOrmModule.forFeature([Category, Product]),
+  ],
   controllers: [ScrapingController],
-  providers: [ScrapingService, WorldOfBooksScraper],
-  exports: [ScrapingService, WorldOfBooksScraper],
+  providers: [ScrapingService],
+  exports: [ScrapingService],
 })
 export class ScrapingModule {}
