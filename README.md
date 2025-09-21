@@ -75,26 +75,23 @@ npm run dev
 3. **View Products**: Click any category to see products within that category
 4. **Scrape Products**: Use "Scrape Products" button to populate product data
 5. **Search & Filter**: Use the search bar and filters to find specific items
-
-## ��� Project Structure
-
+Structure of project
 product-data-explorer/
-├── backend/ # NestJS API Server
-│ ├── src/
-│ │ ├── modules/
-│ │ │ ├── categories/ # Category management
-│ │ │ ├── products/ # Product management
-│ │ │ └── scraping/ # Web scraping logic
-│ │ └── main.ts
-│ └── package.json
-├── frontend/ # Next.js Frontend
-│ ├── src/
-│ │ ├── app/ # App Router pages
-│ │ ├── components/ # Reusable UI components
-│ │ └── lib/ # API client and utilities
-│ └── package.json
-├── docker-compose.yml # PostgreSQL database setup
-└── README.md # Project documentation
+├── .git/                 # Git repository (only here!)
+├── .gitignore           # Root gitignore
+├── README.md            # Project documentation
+├── docker-compose.yml   # Database setup
+├── backend/             # NestJS backend
+│   ├── src/
+│   ├── package.json
+│   ├── .gitignore      # Backend gitignore
+│   └── .env.example    # Backend env example
+└── frontend/           # Next.js frontend
+    ├── src/
+    ├── package.json
+    ├── .gitignore      # Frontend gitignore
+    └── .env.local.example
+
 
 ## ��� Key Features Showcase
 
