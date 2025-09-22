@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen, Database, Globe, Search, Filter, Star, Users, Award, Zap } from 'lucide-react';
+import { BookOpen, Database, Globe, Search, Filter, Star, Users, Award, Zap, Code } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AboutPage() {
@@ -94,7 +94,7 @@ export default function AboutPage() {
             <div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
                 <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                Backend
+                Backend & API
               </h3>
               <ul className="space-y-3">
                 <li className="flex items-center text-gray-600">
@@ -115,9 +115,33 @@ export default function AboutPage() {
                 </li>
                 <li className="flex items-center text-gray-600">
                   <span className="w-2 h-2 bg-gray-300 rounded-full mr-3"></span>
-                  RESTful API architecture
+                  RESTful API with Swagger docs
                 </li>
               </ul>
+              
+              {/* API Documentation Button - Integrated here */}
+              <div className="mt-6 p-4 bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center mr-3">
+                      <Code className="w-5 h-5 text-slate-600" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-900">API Documentation</h4>
+                      <p className="text-xs text-gray-500">Interactive Swagger UI</p>
+                    </div>
+                  </div>
+                  <a
+                    href="http://localhost:3001/api/docs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 bg-slate-600 text-white text-xs font-medium rounded-lg hover:bg-slate-700 transition-colors flex items-center gap-1"
+                  >
+                    <Code className="w-3 h-3" />
+                    View Docs
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -168,6 +192,15 @@ export default function AboutPage() {
             >
               Browse Products
             </Link>
+            <a
+              href="http://localhost:3001/api/docs"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-slate-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-slate-500 transition-colors border border-slate-500 flex items-center gap-2"
+            >
+              <Code className="w-4 h-4" />
+              API Documentation
+            </a>
           </div>
         </div>
 

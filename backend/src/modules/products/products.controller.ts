@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Query,
-  NotFoundException,
-} from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { ProductsService } from './products.service';
 
 @Controller('products')
@@ -14,32 +8,23 @@ export class ProductsController {
   @Get()
   async findAll(
     @Query('page') page: string = '1',
-    @Query('limit') limit: string = '20',
+    @Query('limit') limit: string = '12',
+    @Query('search') search?: string,
+    @Query('sortBy') sortBy?: string,
   ) {
-    const pageNum = Math.max(1, parseInt(page, 10) || 1);
-    const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 20));
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 12;
 
-    return this.productsService.findAll(pageNum, limitNum);
-  }
-
-  @Get('category/:categoryId')
-  async findByCategory(
-    @Param('categoryId') categoryId: string,
-    @Query('page') page: string = '1',
-    @Query('limit') limit: string = '20',
-  ) {
-    const pageNum = Math.max(1, parseInt(page, 10) || 1);
-    const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 20));
-
-    return this.productsService.findByCategory(+categoryId, pageNum, limitNum);
+    return this.productsService.findAll(pageNum, limitNum, search, sortBy);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const product = await this.productsService.findOne(+id);
-    if (!product) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
-    }
-    return product;
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.findOne(id);
+  }
+
+  @Get(':id/reviews')
+  async getProductReviews(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.getProductReviews(id);
   }
 }

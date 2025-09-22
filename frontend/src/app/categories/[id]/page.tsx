@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { categoryApi, productApi, scrapingApi, Category, Product } from '@/lib/api';
-import { ArrowLeft, Package, RefreshCw, Search, Grid, List } from 'lucide-react';
+import { useCategoryProducts } from '@/lib/swr-config';
+import { useNavigationHistory } from '@/hooks/useNavigationHistory';
+import { scrapingApi } from '@/lib/api';
+import { ArrowLeft, Package, RefreshCw, Search, Grid, List, Clock } from 'lucide-react';
 import ProductCard from '@/components/ui/ProductCard';
 import { ProductSkeleton } from '@/components/ui/LoadingSkeleton';
 import Link from 'next/link';
@@ -15,44 +17,45 @@ export default function CategoryPage() {
   const params = useParams();
   const router = useRouter();
   const categoryId = parseInt(params.id as string);
+  const { getLastVisited } = useNavigationHistory();
 
-  const [category, setCategory] = useState<Category | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [productsLoading, setProductsLoading] = useState(false);
-  const [scraping, setScraping] = useState(false);
+  // State management
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalProducts, setTotalProducts] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('date');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [scraping, setScraping] = useState(false);
 
   const productsPerPage = 12;
 
-  useEffect(() => {
-    if (categoryId) {
-      loadCategoryAndProducts();
-    }
-  }, [categoryId, currentPage]);
+  // SWR data fetching with real-time updates
+  const { 
+    products = [], // ✅ Default to empty array
+    category, 
+    totalPages = 0, 
+    totalProducts = 0, 
+    loading, 
+    error, 
+    refetch 
+  } = useCategoryProducts(categoryId, currentPage, productsPerPage, searchTerm, sortBy);
 
-  useEffect(() => {
+  // ✅ Use useMemo instead of useEffect to prevent infinite loops
+  const filteredProducts = useMemo(() => {
+    // Safety check - ensure products is an array
+    if (!Array.isArray(products)) {
+      return [];
+    }
+
     let filtered = [...products];
 
     // Apply search filter
     if (searchTerm && searchTerm.length >= 2) {
       const searchLower = searchTerm.toLowerCase().trim();
       filtered = filtered.filter(product =>
-        product.title.toLowerCase().includes(searchLower) ||
+        product.title?.toLowerCase().includes(searchLower) ||
         product.author?.toLowerCase().includes(searchLower) ||
         product.description?.toLowerCase().includes(searchLower)
       );
-    } else if (searchTerm.length < 2 && searchTerm.length > 0) {
-      // If search term is too short, keep all products but show hint
-      filtered = [...products];
     }
 
     // Apply sorting
@@ -63,61 +66,34 @@ export default function CategoryPage() {
         case 'rating':
           return (b.rating || 0) - (a.rating || 0);
         case 'title':
-          return a.title.localeCompare(b.title);
+          return (a.title || '').localeCompare(b.title || '');
         case 'date':
         default:
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          const dateA = new Date(a.createdAt || 0).getTime();
+          const dateB = new Date(b.createdAt || 0).getTime();
+          return dateB - dateA;
       }
     });
 
-    setFilteredProducts(filtered);
+    return filtered;
   }, [products, searchTerm, sortBy]);
 
-  const loadCategoryAndProducts = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const categoryResponse = await categoryApi.getById(categoryId);
-      setCategory(categoryResponse.data);
-
-      await loadProducts();
-    } catch (error) {
-      console.error('Error loading category:', error);
-      setError('Failed to load category. It may not exist.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadProducts = async () => {
-    try {
-      setProductsLoading(true);
-      const productsResponse = await productApi.getByCategory(categoryId, currentPage, productsPerPage);
-      setProducts(productsResponse.data.products);
-      setTotalProducts(productsResponse.data.total);
-    } catch (error) {
-      console.error('Error loading products:', error);
-    } finally {
-      setProductsLoading(false);
-    }
-  };
-
   const handleScrapeProducts = async () => {
+    if (!category) return;
+    
     try {
       setScraping(true);
-      setError(null);
       await scrapingApi.scrapeProducts(categoryId);
-      await loadProducts();
+      await refetch(); // SWR will refetch the data
     } catch (error) {
       console.error('Error scraping products:', error);
-      setError('Failed to scrape products. Please try again.');
+      alert('Failed to scrape products. Please try again.');
     } finally {
       setScraping(false);
     }
   };
 
-  const totalPages = Math.ceil(totalProducts / productsPerPage);
+  const lastVisited = getLastVisited(`/categories/${categoryId}`);
 
   if (loading) {
     return (
@@ -137,10 +113,16 @@ export default function CategoryPage() {
       <div className="bg-gradient-page min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <div className="text-red-600 mb-4 text-lg">{error}</div>
+            <div className="text-red-600 mb-4 text-lg">{error.message}</div>
+            <button
+              onClick={() => refetch()}
+              className="btn btn-primary btn-md mr-4"
+            >
+              Try Again
+            </button>
             <button
               onClick={() => router.back()}
-              className="btn btn-primary btn-md"
+              className="btn btn-secondary btn-md"
             >
               Go Back
             </button>
@@ -178,13 +160,26 @@ export default function CategoryPage() {
             Back to Categories
           </Link>
           
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 relative">
+            {/* Last Visited Badge */}
+            {lastVisited && (
+              <div className="absolute top-4 right-4">
+                <div className="flex items-center text-xs text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                  <Clock className="w-3 h-3 mr-1" />
+                  Previously visited
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
-              <div>
+              <div className="flex-1">
                 <h1 className="text-4xl font-bold text-gray-900 mb-3">{category.name}</h1>
                 <p className="text-xl text-gray-600">
                   {totalProducts} {totalProducts === 1 ? 'product' : 'products'} available
                 </p>
+                {category.description && (
+                  <p className="text-gray-500 mt-2">{category.description}</p>
+                )}
               </div>
               
               <button
@@ -262,6 +257,15 @@ export default function CategoryPage() {
                   <List className="w-5 h-5" />
                 </button>
               </div>
+
+              {/* Refresh */}
+              <button
+                onClick={() => refetch()}
+                className="p-3 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
+                title="Refresh products"
+              >
+                <RefreshCw className="w-5 h-5" />
+              </button>
             </div>
           </div>
           
@@ -292,7 +296,7 @@ export default function CategoryPage() {
         </div>
 
         {/* Products Grid */}
-        {productsLoading ? (
+        {loading && products.length === 0 ? (
           <div className={`grid ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'} gap-6`}>
             {[...Array(12)].map((_, i) => (
               <ProductSkeleton key={i} />

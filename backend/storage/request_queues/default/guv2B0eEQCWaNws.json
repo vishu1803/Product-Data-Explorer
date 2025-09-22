@@ -1,9 +1,9 @@
 {
-	"id": "guv2B0eEQCWaNws",
-	"json": "{\"id\":\"guv2B0eEQCWaNws\",\"url\":\"https://www.worldofbooks.com/en-gb/search?q=All%20Fiction%20Books\",\"loadedUrl\":\"https://www.worldofbooks.com/en-gb/search?q=All%20Fiction%20Books\",\"uniqueKey\":\"https://www.worldofbooks.com/en-gb/search?q=All+Fiction+Books\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"state\":4}},\"handledAt\":\"2025-09-21T13:03:04.656Z\"}",
-	"method": "GET",
-	"orderNo": null,
-	"retryCount": 0,
-	"uniqueKey": "https://www.worldofbooks.com/en-gb/search?q=All+Fiction+Books",
-	"url": "https://www.worldofbooks.com/en-gb/search?q=All%20Fiction%20Books"
+  "id": "guv2B0eEQCWaNws",
+  "json": "{\"id\":\"guv2B0eEQCWaNws\",\"url\":\"https://www.worldofbooks.com/en-gb/search?q=All%20Fiction%20Books\",\"loadedUrl\":\"https://www.worldofbooks.com/en-gb/search?q=All%20Fiction%20Books\",\"uniqueKey\":\"https://www.worldofbooks.com/en-gb/search?q=All+Fiction+Books\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":3,\"errorMessages\":[\"Error: requestHandler timed out after 60 seconds.\\n    at Timeout._onTimeout (C:\\\\Users\\\\VISHW\\\\OneDrive\\\\Desktop\\\\assignment\\\\product-data-explorer\\\\backend\\\\node_modules\\\\@apify\\\\src\\\\index.ts:88:74)\\n    at listOnTimeout (node:internal/timers:588:17)\\n    at process.processTimers (node:internal/timers:523:7)\",\"Error: requestHandler timed out after 60 seconds.\\n    at Timeout._onTimeout (C:\\\\Users\\\\VISHW\\\\OneDrive\\\\Desktop\\\\assignment\\\\product-data-explorer\\\\backend\\\\node_modules\\\\@apify\\\\src\\\\index.ts:88:74)\\n    at listOnTimeout (node:internal/timers:588:17)\\n    at process.processTimers (node:internal/timers:523:7)\",\"Error: requestHandler timed out after 60 seconds.\\n    at Timeout._onTimeout (C:\\\\Users\\\\VISHW\\\\OneDrive\\\\Desktop\\\\assignment\\\\product-data-explorer\\\\backend\\\\node_modules\\\\@apify\\\\src\\\\index.ts:88:74)\\n    at listOnTimeout (node:internal/timers:588:17)\\n    at process.processTimers (node:internal/timers:523:7)\",\"Error: requestHandler timed out after 60 seconds.\\n    at Timeout._onTimeout (C:\\\\Users\\\\VISHW\\\\OneDrive\\\\Desktop\\\\assignment\\\\product-data-explorer\\\\backend\\\\node_modules\\\\@apify\\\\src\\\\index.ts:88:74)\\n    at listOnTimeout (node:internal/timers:588:17)\\n    at process.processTimers (node:internal/timers:523:7)\"],\"headers\":{},\"userData\":{\"__crawlee\":{\"state\":5}},\"handledAt\":\"2025-09-22T08:39:22.577Z\"}",
+  "method": "GET",
+  "orderNo": null,
+  "retryCount": 3,
+  "uniqueKey": "https://www.worldofbooks.com/en-gb/search?q=All+Fiction+Books",
+  "url": "https://www.worldofbooks.com/en-gb/search?q=All%20Fiction%20Books"
 }

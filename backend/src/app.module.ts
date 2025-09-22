@@ -6,6 +6,8 @@ import { ProductsModule } from './modules/products/products.module';
 import { ScrapingModule } from './modules/scraping/scraping.module';
 import { Category } from './modules/categories/category.entity';
 import { Product } from './modules/products/product.entity';
+import { NavigationModule } from './modules/navigation/navigation.module';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -32,8 +34,9 @@ import { Product } from './modules/products/product.entity';
     CategoriesModule,
     ProductsModule,
     ScrapingModule,
+    NavigationModule,
   ],
-  controllers: [],
+  controllers: [AppController],
   providers: [],
 })
 export class AppModule {}

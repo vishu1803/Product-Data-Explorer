@@ -10,12 +10,27 @@ export const api = axios.create({
 export interface Category {
   id: number;
   name: string;
-  slug: string;
+  slug?: string;
   description?: string;
   worldOfBooksUrl?: string;
-  isActive: boolean;
+  parentId?: number;
+  isActive?: boolean;
   createdAt: string;
   updatedAt: string;
+  products?: Product[];
+  subcategories?: Category[];
+}
+
+export interface ProductReview {
+  id: number;
+  reviewerName?: string;
+  rating: number;
+  reviewTitle?: string;
+  reviewText?: string;
+  isVerifiedPurchase: boolean;
+  reviewDate?: string;
+  helpfulCount?: string;
+  createdAt: string;
 }
 
 export interface Product {
@@ -24,44 +39,72 @@ export interface Product {
   originalTitle?: string;
   author?: string;
   description?: string;
+  detailedDescription?: string;
   price?: number;
   currency?: string;
   rating?: number;
   reviewCount: number;
   isbn?: string;
-  isAvailable: boolean;
+  isbn13?: string;
+  publisher?: string;
+  publicationDate?: string;
+  pages?: number;
+  language?: string;
+  dimensions?: string;
+  weight?: string;
   imageUrl?: string;
   imageLocalPath?: string;
   imageFilename?: string;
   worldOfBooksUrl?: string;
   condition?: string;
   format?: string;
+  tags?: string[];
+  genres?: string[];
+  synopsis?: string;
+  tableOfContents?: string;
+  aboutAuthor?: string;
+  similarProducts?: string[];
+  isAvailable: boolean;
+  categoryId: number;
   category?: Category;
+  reviews?: ProductReview[];
   createdAt: string;
   updatedAt: string;
-}
-export interface ProductsResponse {
-  products: Product[];
-  total: number;
 }
 
 // API functions
 export const categoryApi = {
-  getAll: () => api.get<Category[]>('/categories'),
-  getById: (id: number) => api.get<Category>(`/categories/${id}`),
+  getAll: () => api.get<Category[]>('/api/categories'),
+  getById: (id: number) => api.get<Category>(`/api/categories/${id}`),
 };
 
 export const productApi = {
-  getAll: (page: number = 1, limit: number = 20) => 
-    api.get<ProductsResponse>(`/products?page=${page}&limit=${limit}`),
-  getByCategory: (categoryId: number, page: number = 1, limit: number = 20) => 
-    api.get<ProductsResponse>(`/products/category/${categoryId}?page=${page}&limit=${limit}`),
-  getById: (id: number) => api.get<Product>(`/products/${id}`),
+  getAll: (page: number = 1, limit: number = 12, search?: string, sortBy?: string) => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+    if (search) params.append('search', search);
+    if (sortBy) params.append('sortBy', sortBy);
+    
+    return api.get(`/api/products?${params.toString()}`);
+  },
+  getById: (id: number) => api.get<Product>(`/api/products/${id}`),
+  getByCategory: (categoryId: number, page: number = 1, limit: number = 12, search?: string, sortBy?: string) => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+    if (search) params.append('search', search);
+    if (sortBy) params.append('sortBy', sortBy);
+    
+    return api.get(`/api/categories/${categoryId}/products?${params.toString()}`);
+  },
+  getReviews: (productId: number) => api.get<ProductReview[]>(`/api/products/${productId}/reviews`),
 };
 
 export const scrapingApi = {
-  test: () => api.get('/scraping/test'),
-  scrapeCategories: () => api.post('/scraping/categories', {}, { timeout: 60000 }),
-  scrapeProducts: (categoryId: number) => 
-    api.post(`/scraping/products/${categoryId}`, {}, { timeout: 60000 }),
+  scrapeCategories: () => api.post('/scraping/categories'),
+  scrapeProducts: (categoryId: number) => api.post(`/scraping/products/${categoryId}`),
+  scrapeProductDetails: (productId: number) => api.post(`/scraping/product-details/${productId}`),
 };
