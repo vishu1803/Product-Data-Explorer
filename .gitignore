@@ -1,38 +1,58 @@
-# Dependencies (these folders are huge and unnecessary)
-node_modules/
+
+# Dependencies
+**/node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Production builds (can be recreated)
-dist/
-build/
-.next/
+# Environment variables (NEVER commit these)
+**/.env
+**/.env.local
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
+**/.env.production
 
-# Environment variables (contain passwords - NEVER upload these!)
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Build outputs
+**/dist/
+**/build/
+**/.next/
+**/out/
 
-# Database data (local database files)
-postgres-data/
+# Logs
+**/*.log
+**/logs/
 
-# IDE files (personal editor settings)
+# Runtime data
+**/pids/
+**/*.pid
+**/lib-cov/
+**/coverage/
+**/.nyc_output/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# Operating system files
-.DS_Store
-Thumbs.db
+# Docker
+**/docker-compose.override.yml
 
-# Log files
-logs/
-*.log
+# Database
+**/postgres_data/
+**/redis_data/
 
 # Temporary files
-tmp/
-temp/
+**/tmp/
+**/temp/
+EOF

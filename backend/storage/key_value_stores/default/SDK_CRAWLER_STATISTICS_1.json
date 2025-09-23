@@ -8,18 +8,30 @@
   "requestMaxDurationMillis": 0,
   "requestTotalFailedDurationMillis": 0,
   "requestTotalFinishedDurationMillis": 0,
-  "crawlerStartedAt": "2025-09-22T07:52:39.954Z",
-  "crawlerFinishedAt": "2025-09-22T07:56:21.077Z",
-  "statsPersistedAt": "2025-09-22T07:56:21.078Z",
-  "crawlerRuntimeMillis": 221321,
-  "crawlerLastStartTimestamp": 1758527559757,
+  "crawlerStartedAt": "2025-09-23T18:11:21.420Z",
+  "crawlerFinishedAt": "2025-09-23T18:20:43.583Z",
+  "statsPersistedAt": "2025-09-23T18:20:43.583Z",
+  "crawlerRuntimeMillis": 562216,
+  "crawlerLastStartTimestamp": 1758651081367,
   "requestRetryHistogram": [],
   "statsId": 1,
   "requestAvgFailedDurationMillis": null,
   "requestAvgFinishedDurationMillis": null,
   "requestTotalDurationMillis": 0,
   "requestsTotal": 0,
-  "requestsWithStatusCode": {},
+  "requestsWithStatusCode": {
+    "200": 2
+  },
   "errors": {},
-  "retryErrors": {}
+  "retryErrors": {
+    "C:\\Users\\VISHW\\OneDrive\\Desktop\\assignment\\product-data-explorer\\backend\\node_modules\\@apify\\src\\index.ts:88:74": {
+      "missing error code": {
+        "Error": {
+          "requestHandler timed out after 60 seconds.": {
+            "count": 2
+          }
+        }
+      }
+    }
+  }
 }

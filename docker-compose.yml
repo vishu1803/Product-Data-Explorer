@@ -1,65 +1,41 @@
+version: '3.8'
+
 services:
+  # PostgreSQL Database
   postgres:
     image: postgres:15
     container_name: product-explorer-db
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password123
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_admin_password
       POSTGRES_DB: product_explorer
     ports:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d product_explorer"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  backend:
-    build: 
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: product-explorer-backend
-    ports:
-      - "3001:3001"
-    environment:
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
-      DATABASE_USERNAME: admin
-      DATABASE_PASSWORD: password123
-      DATABASE_NAME: product_explorer
-      NODE_ENV: development
-      PORT: 3001
-    depends_on:
-      postgres:
-        condition: service_healthy
-    volumes:
-      - ./backend/src:/app/src
-      - ./backend/package.json:/app/package.json
-      - backend_node_modules:/app/node_modules
+      test: ["CMD-SHELL", "pg_isready -U postgres -d product_explorer"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
-  frontend:
-    build: 
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: product-explorer-frontend
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: product-explorer-redis
     ports:
-      - "3000:3000"
-    environment:
-      NEXT_PUBLIC_API_URL: http://localhost:3001
-      NODE_ENV: development
-    depends_on:
-      - backend
+      - "6379:6379"
     volumes:
-      - ./frontend/src:/app/src
-      - ./frontend/package.json:/app/package.json
-      - frontend_node_modules:/app/node_modules
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
 
 volumes:
   postgres_data:
-  backend_node_modules:
-  frontend_node_modules:
+  redis_data:

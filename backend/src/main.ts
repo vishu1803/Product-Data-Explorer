@@ -10,6 +10,11 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { ValidationPipe } from '@nestjs/common';
+
+// Security and Rate Limiting
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
 
 // Conditional import for Swagger
 let DocumentBuilder, SwaggerModule;
@@ -24,17 +29,83 @@ try {
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // Enable CORS
+  // ✅ Security headers
+  app.use(
+    helmet({
+      crossOriginEmbedderPolicy: false, // Allow embedding for development
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrc: ["'self'"],
+          imgSrc: ["'self'", 'data:', 'https:'],
+        },
+      },
+    }),
+  );
+
+  // ✅ Global input validation
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+    }),
+  );
+
+  // ✅ Rate limiting for general API endpoints
+  const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: {
+      error: 'Too many requests from this IP',
+      message: 'Please try again after 15 minutes',
+      statusCode: 429,
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  // ✅ Stricter rate limiting for scraping endpoints
+  const scrapingLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    max: 5, // limit scraping requests
+    message: {
+      error: 'Scraping rate limit exceeded',
+      message: 'Please wait 5 minutes before making another scraping request',
+      statusCode: 429,
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  // Apply rate limiting
+  app.use(generalLimiter);
+  app.use('/api/scraping', scrapingLimiter);
+
+  // ✅ Enhanced CORS with environment variables
+  const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',')
+    : [
+        process.env.FRONTEND_URL || 'http://localhost:3000',
+        'http://localhost:3002',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:3002',
+      ];
+
   app.enableCors({
-    origin: [
-      process.env.FRONTEND_URL || 'http://localhost:3000',
-      'http://localhost:3002',
-      'http://127.0.0.1:3000',
-      'http://127.0.0.1:3002'
-    ],
+    origin: allowedOrigins,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    exposedHeaders: [
+      'X-Total-Count',
+      'X-RateLimit-Limit',
+      'X-RateLimit-Remaining',
+    ],
   });
 
   // Global API prefix
@@ -44,15 +115,20 @@ async function bootstrap() {
   if (DocumentBuilder && SwaggerModule) {
     const config = new DocumentBuilder()
       .setTitle('Product Data Explorer API')
-      .setDescription('API for managing categories and products scraped from World of Books')
+      .setDescription(
+        'API for managing categories and products scraped from World of Books',
+      )
       .setVersion('1.0')
       .addTag('categories', 'Category management endpoints')
       .addTag('products', 'Product management endpoints')
       .addTag('scraping', 'Web scraping endpoints')
       .build();
-    
+
     const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api/docs', app, document);
+    SwaggerModule.setup('api/docs', app, document, {
+      customSiteTitle: 'Product Explorer API Documentation',
+      customCss: '.swagger-ui .topbar { display: none }',
+    });
   }
 
   // Serve static images
@@ -70,15 +146,21 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3001;
   await app.listen(port, '0.0.0.0');
-  
+
   console.log(`🚀 Backend server is running on http://localhost:${port}`);
   console.log(`📋 API available at http://localhost:${port}/api`);
   console.log(`🗂️  Categories: http://localhost:${port}/api/categories`);
-  
+  console.log(`🔒 Security: Rate limiting and input validation enabled`);
+  console.log(`🌐 CORS: Enabled for ${allowedOrigins.join(', ')}`);
+
   if (DocumentBuilder && SwaggerModule) {
-    console.log(`📚 Swagger Docs available at http://localhost:${port}/api/docs`);
+    console.log(
+      `📚 Swagger Docs available at http://localhost:${port}/api/docs`,
+    );
   }
-  
-  console.log(`📁 Static images: http://localhost:${port}/static/images/products/`);
+
+  console.log(
+    `📁 Static images: http://localhost:${port}/static/images/products/`,
+  );
 }
 bootstrap();

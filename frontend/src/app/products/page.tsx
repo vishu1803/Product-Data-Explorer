@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { productApi, categoryApi, scrapingApi, Product, Category } from '@/lib/api';
-import { Search, Grid, List, Package, Download, RefreshCw, AlertCircle, CheckCircle } from 'lucide-react';
+import { Search, Grid, List, Package, Download, RefreshCw, AlertCircle, CheckCircle, X } from 'lucide-react';
 import Link from 'next/link';
 
 type SortOption = 'date' | 'price' | 'rating' | 'title';
@@ -81,18 +81,52 @@ export default function ProductsPage() {
       setError(null);
       setSuccess(null);
 
-      // Scrape products for each category
-      for (const category of categories.slice(0, 3)) { // Limit to first 3 categories to avoid overwhelming
-        setScrapingCategory(category.id);
-        await scrapingApi.scrapeProducts(category.id);
+      const categoriesToScrape = categories.slice(0, 3);
+      let successCount = 0;
+      let errorCount = 0;
+
+      // ✅ Scrape one category at a time with individual timeout handling
+      for (const category of categoriesToScrape) {
+        try {
+          setScrapingCategory(category.id);
+          console.log(`🚀 Scraping products for category: ${category.name} (ID: ${category.id})`);
+          
+          // ✅ Set a longer timeout for individual scraping requests
+          await Promise.race([
+            scrapingApi.scrapeProducts(category.id),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error(`Timeout scraping ${category.name}`)), 180000) // 3 minutes per category
+            )
+          ]);
+          
+          successCount++;
+          console.log(`✅ Successfully scraped ${category.name}`);
+          
+          // ✅ Small delay between categories to avoid overwhelming the server
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+        } catch (categoryError: any) {
+          errorCount++;
+          console.error(`❌ Failed to scrape ${category.name}:`, categoryError.message);
+          // Continue with next category instead of stopping
+        }
       }
 
-      // Reload products
+      // ✅ Reload products after all scraping attempts
+      console.log('🔄 Reloading products...');
       await loadProducts();
-      setSuccess(`Successfully scraped products from ${Math.min(categories.length, 3)} categories!`);
+      
+      // ✅ Show appropriate success/error message
+      if (successCount > 0 && errorCount === 0) {
+        setSuccess(`Successfully scraped products from ${successCount} categories!`);
+      } else if (successCount > 0 && errorCount > 0) {
+        setSuccess(`Partially successful: ${successCount} categories scraped, ${errorCount} failed.`);
+      } else {
+        setError(`Failed to scrape products from all ${errorCount} categories. Check backend logs.`);
+      }
       
     } catch (error: any) {
-      console.error('Error scraping products:', error);
+      console.error('❌ Overall scraping error:', error);
       setError(`Failed to scrape products: ${error.message || 'Unknown error'}`);
     } finally {
       setScraping(false);
@@ -104,12 +138,28 @@ export default function ProductsPage() {
     try {
       setScrapingCategory(categoryId);
       setError(null);
-      await scrapingApi.scrapeProducts(categoryId);
+      
+      console.log(`🚀 Scraping single category: ${categoryName} (ID: ${categoryId})`);
+      
+      // ✅ Add timeout for single category scraping too
+      await Promise.race([
+        scrapingApi.scrapeProducts(categoryId),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error(`Timeout scraping ${categoryName}`)), 120000) // 2 minutes for single category
+        )
+      ]);
+      
       await loadProducts();
       setSuccess(`Successfully scraped products from ${categoryName}!`);
+      console.log(`✅ Successfully scraped ${categoryName}`);
+      
     } catch (error: any) {
-      console.error('Error scraping category products:', error);
-      setError(`Failed to scrape ${categoryName}: ${error.message || 'Unknown error'}`);
+      console.error(`❌ Error scraping ${categoryName}:`, error);
+      if (error.message.includes('Timeout')) {
+        setError(`Scraping ${categoryName} is taking longer than expected. Please try again or check backend logs.`);
+      } else {
+        setError(`Failed to scrape ${categoryName}: ${error.message || 'Unknown error'}`);
+      }
     } finally {
       setScrapingCategory(null);
     }
@@ -158,6 +208,18 @@ export default function ProductsPage() {
               </div>
             )}
 
+            {/* ✅ Progress Indicator */}
+            {scrapingCategory && (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                <div className="flex items-center">
+                  <RefreshCw className="w-4 h-4 animate-spin text-blue-600 mr-2" />
+                  <p className="text-blue-700">
+                    Currently scraping: {categories.find(cat => cat.id === scrapingCategory)?.name}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-4">
               <button
@@ -169,16 +231,15 @@ export default function ProductsPage() {
                 Refresh Products
               </button>
 
-              {totalProducts === 0 && (
-                <button
-                  onClick={handleScrapeAllProducts}
-                  disabled={scraping || categories.length === 0}
-                  className="btn btn-success btn-md"
-                >
-                  <Download className={`w-4 h-4 mr-2 ${scraping ? 'animate-spin' : ''}`} />
-                  {scraping ? 'Scraping...' : 'Scrape Products'}
-                </button>
-              )}
+              {/* ✅ NEW: Scrape Products Button - Always visible */}
+              <button
+                onClick={handleScrapeAllProducts}
+                disabled={scraping || categories.length === 0}
+                className="btn btn-success btn-md"
+              >
+                <Download className={`w-4 h-4 mr-2 ${scraping ? 'animate-spin' : ''}`} />
+                {scraping ? 'Scraping...' : 'Scrape Products'}
+              </button>
 
               {categories.length === 0 && (
                 <Link href="/" className="btn btn-primary btn-md">
@@ -216,28 +277,83 @@ export default function ProductsPage() {
           </div>
         )}
 
-        {/* Filters and Controls */}
-        {totalProducts > 0 && (
+        {/* ✅ FIXED: Filters and Controls - Always show when there are categories */}
+        {categories.length > 0 && (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
             <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
-              {/* Search */}
-              <div className="relative flex-1 max-w-lg">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-20 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                {searchTerm && (
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 px-2 py-1 text-sm font-medium hover:bg-gray-100 rounded transition-colors"
-                  >
-                    Clear
-                  </button>
-                )}
+              {/* ✅ FIXED: Search with nuclear option styling */}
+              <div style={{ maxWidth: '32rem', width: '100%' }}>
+                <div style={{ position: 'relative' }}>
+                  {/* Search Icon */}
+                  <div style={{
+                    position: 'absolute',
+                    left: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    pointerEvents: 'none',
+                    zIndex: 5
+                  }}>
+                    <Search style={{ width: '20px', height: '20px', color: '#9ca3af' }} />
+                  </div>
+                  
+                  {/* Input Field with complete positioning override */}
+                  <input
+                    type="text"
+                    placeholder="Search products..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{
+                      position: 'relative',
+                      zIndex: 10,
+                      width: '100%',
+                      height: '48px',
+                      paddingLeft: '40px',
+                      paddingRight: '40px',
+                      paddingTop: '12px',
+                      paddingBottom: '12px',
+                      fontSize: '16px',
+                      color: '#111827',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '12px',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                      display: 'block'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#3b82f6';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#d1d5db';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  />
+                  
+                  {/* Clear Button */}
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      type="button"
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        zIndex: 15,
+                        width: '20px',
+                        height: '20px',
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#9ca3af'
+                      }}
+                      aria-label="Clear search"
+                    >
+                      <X style={{ width: '16px', height: '16px' }} />
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Controls */}
@@ -274,18 +390,32 @@ export default function ProductsPage() {
           </div>
         )}
 
-        {/* Products Grid */}
-        {totalProducts === 0 ? (
+        {/* ✅ FIXED: Products Grid or No Results */}
+        {products.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-2xl shadow-sm border border-gray-100">
             <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Products Found</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              {searchTerm ? 'No Products Match Your Search' : 'No Products Found'}
+            </h3>
             <p className="text-gray-600 mb-6">
-              {categories.length === 0 
-                ? "Start by scraping categories from the home page, then scrape products from those categories."
-                : "Use the scrape buttons above to get products from your categories."
-              }
+              {searchTerm ? (
+                <>
+                  No products found for "{searchTerm}". Try adjusting your search terms or{' '}
+                  <button 
+                    onClick={() => setSearchTerm('')}
+                    className="text-blue-600 hover:text-blue-800 font-medium underline"
+                  >
+                    clear the search
+                  </button>
+                  {' '}to see all products.
+                </>
+              ) : categories.length === 0 ? (
+                "Start by scraping categories from the home page, then scrape products from those categories."
+              ) : (
+                "Use the scrape buttons above to get products from your categories."
+              )}
             </p>
-            {categories.length === 0 && (
+            {categories.length === 0 && !searchTerm && (
               <Link href="/" className="btn btn-primary btn-lg">
                 Go to Home Page
               </Link>

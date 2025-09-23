@@ -1,25 +1,50 @@
 {
   "requestsFinished": 0,
-  "requestsFailed": 0,
-  "requestsRetries": 0,
-  "requestsFailedPerMinute": 0,
+  "requestsFailed": 1,
+  "requestsRetries": 1,
+  "requestsFailedPerMinute": 8,
   "requestsFinishedPerMinute": 0,
   "requestMinDurationMillis": null,
   "requestMaxDurationMillis": 0,
-  "requestTotalFailedDurationMillis": 0,
+  "requestTotalFailedDurationMillis": 1522,
   "requestTotalFinishedDurationMillis": 0,
-  "crawlerStartedAt": "2025-09-22T07:56:45.363Z",
-  "crawlerFinishedAt": "2025-09-22T07:57:42.336Z",
-  "statsPersistedAt": "2025-09-22T07:57:42.336Z",
-  "crawlerRuntimeMillis": 57113,
-  "crawlerLastStartTimestamp": 1758527805223,
-  "requestRetryHistogram": [],
+  "crawlerStartedAt": "2025-09-23T18:20:54.750Z",
+  "crawlerFinishedAt": "2025-09-23T18:21:01.793Z",
+  "statsPersistedAt": "2025-09-23T18:21:01.794Z",
+  "crawlerRuntimeMillis": 7150,
+  "crawlerLastStartTimestamp": 1758651654644,
+  "requestRetryHistogram": [
+    null,
+    null,
+    null,
+    1
+  ],
   "statsId": 4,
-  "requestAvgFailedDurationMillis": null,
+  "requestAvgFailedDurationMillis": 1522,
   "requestAvgFinishedDurationMillis": null,
-  "requestTotalDurationMillis": 0,
-  "requestsTotal": 0,
+  "requestTotalDurationMillis": 1522,
+  "requestsTotal": 1,
   "requestsWithStatusCode": {},
-  "errors": {},
-  "retryErrors": {}
+  "errors": {
+    "C:\\Users\\VISHW\\OneDrive\\Desktop\\assignment\\product-data-explorer\\backend\\node_modules\\@crawlee\\src\\internals\\utils\\playwright-utils.ts:241:17": {
+      "missing error code": {
+        "Error": {
+          "page.goto: net::ERR_EMPTY_RESPONSE at https://www.worldofbooks.com/en-gb/category/shop-now": {
+            "count": 1
+          }
+        }
+      }
+    }
+  },
+  "retryErrors": {
+    "C:\\Users\\VISHW\\OneDrive\\Desktop\\assignment\\product-data-explorer\\backend\\node_modules\\@crawlee\\src\\internals\\utils\\playwright-utils.ts:241:17": {
+      "missing error code": {
+        "Error": {
+          "page.goto: net::ERR_EMPTY_RESPONSE at https://www.worldofbooks.com/en-gb/category/shop-now": {
+            "count": 3
+          }
+        }
+      }
+    }
+  }
 }

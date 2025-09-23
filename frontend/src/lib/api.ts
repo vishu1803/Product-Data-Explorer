@@ -4,7 +4,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 60000,
+  timeout: 300000,
 });
 
 export interface Category {
@@ -103,8 +103,9 @@ export const productApi = {
   getReviews: (productId: number) => api.get<ProductReview[]>(`/api/products/${productId}/reviews`),
 };
 
+// ✅ FIXED: Added missing /api prefix to scraping endpoints
 export const scrapingApi = {
-  scrapeCategories: () => api.post('/scraping/categories'),
-  scrapeProducts: (categoryId: number) => api.post(`/scraping/products/${categoryId}`),
-  scrapeProductDetails: (productId: number) => api.post(`/scraping/product-details/${productId}`),
+  scrapeCategories: () => api.post('/api/scraping/categories'),
+  scrapeProducts: (categoryId: number) => api.post(`/api/scraping/products/${categoryId}`),
+  scrapeProductDetails: (productId: number) => api.post(`/api/scraping/product-details/${productId}`),
 };

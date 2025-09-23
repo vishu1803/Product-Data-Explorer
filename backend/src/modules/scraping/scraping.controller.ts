@@ -1,9 +1,20 @@
-import { Controller, Post, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Post, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { ScrapingService } from './scraping.service';
 
 @Controller('scraping')
 export class ScrapingController {
   constructor(private readonly scrapingService: ScrapingService) {}
+
+  // ✅ Add temporary GET route for browser testing
+  @Get('categories')
+  async testScrapeCategories() {
+    return {
+      message:
+        'Scraping endpoint is working! Use POST method to actually scrape.',
+      endpoint: 'POST /api/scraping/categories',
+      status: 'ready',
+    };
+  }
 
   @Post('categories')
   async scrapeCategories() {

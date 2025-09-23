@@ -552,6 +552,17 @@ body {
   background-color: #fafafa;
 }
 
+/* ✅ REMOVED PROBLEMATIC LINE - This was breaking the layout
+div {
+  width: fit-content;
+}
+*/
+
+/* ✅ Add specific utility class instead if needed */
+.fit-content {
+  width: fit-content;
+}
+
 /* Remove default focus outlines */
 button:focus,
 input:focus,
