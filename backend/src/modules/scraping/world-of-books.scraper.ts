@@ -97,21 +97,26 @@ export class WorldOfBooksScraper {
                       }
                     }
                   } catch (error) {
-                    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-                    this.logger.warn(`Error processing element: ${errorMessage}`);
+                    const errorMessage =
+                      error instanceof Error ? error.message : 'Unknown error';
+                    this.logger.warn(
+                      `Error processing element: ${errorMessage}`,
+                    );
                   }
                 }
 
                 if (categories.length > 0) break; // Stop after finding categories
               } catch (error) {
-                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                const errorMessage =
+                  error instanceof Error ? error.message : 'Unknown error';
                 this.logger.warn(
                   `No elements found for selector ${selector}: ${errorMessage}`,
                 );
               }
             }
           } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            const errorMessage =
+              error instanceof Error ? error.message : 'Unknown error';
             this.logger.error(`Error scraping categories: ${errorMessage}`);
           }
         },
@@ -132,7 +137,8 @@ export class WorldOfBooksScraper {
           await crawler.run([url]);
           if (categories.length > 0) break;
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
           this.logger.error(`Failed to scrape ${url}: ${errorMessage}`);
         }
       }
@@ -147,7 +153,8 @@ export class WorldOfBooksScraper {
       );
       return categories.slice(0, 12); // Limit to 12 categories
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Category scraping failed: ${errorMessage}`);
       return this.getFallbackCategories();
     }
@@ -196,8 +203,11 @@ export class WorldOfBooksScraper {
                       products.push(product);
                     }
                   } catch (error) {
-                    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-                    this.logger.warn(`Error extracting product ${i}: ${errorMessage}`);
+                    const errorMessage =
+                      error instanceof Error ? error.message : 'Unknown error';
+                    this.logger.warn(
+                      `Error extracting product ${i}: ${errorMessage}`,
+                    );
                   }
                 }
 
@@ -207,7 +217,8 @@ export class WorldOfBooksScraper {
               }
             }
           } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            const errorMessage =
+              error instanceof Error ? error.message : 'Unknown error';
             this.logger.error(`Error scraping products: ${errorMessage}`);
           }
         },
@@ -226,7 +237,8 @@ export class WorldOfBooksScraper {
       this.logger.log(`Successfully scraped ${products.length} real products`);
       return products;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Product scraping failed: ${errorMessage}`);
       return this.generateSampleProducts(categoryUrl, limit);
     }
@@ -352,7 +364,8 @@ export class WorldOfBooksScraper {
 
       return null;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.warn(`Error extracting product: ${errorMessage}`);
       return null;
     }

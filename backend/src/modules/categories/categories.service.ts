@@ -3,7 +3,6 @@ interface ErrorWithMessage {
   stack?: string;
 }
 
-
 import { Injectable, NotFoundException, Logger, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
@@ -11,11 +10,9 @@ import { Category } from './category.entity';
 import { Product } from '../products/product.entity';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
-
 @Injectable()
 export class CategoriesService {
   private readonly logger = new Logger(CategoriesService.name);
-
 
   constructor(
     @InjectRepository(Category)
@@ -24,7 +21,6 @@ export class CategoriesService {
     private productRepository: Repository<Product>,
     @Inject(CACHE_MANAGER) private cacheManager: any,
   ) {}
-
 
   // ✅ Fixed cache wrapper methods
   private async cacheGet<T>(key: string): Promise<T | undefined> {
@@ -37,7 +33,6 @@ export class CategoriesService {
     }
   }
 
-
   private async cacheSet(key: string, value: any, ttl?: number): Promise<void> {
     try {
       await this.cacheManager.set(key, value, ttl);
@@ -45,7 +40,6 @@ export class CategoriesService {
       this.logger.warn(`Cache set failed for key "${key}": ${_error.message}`);
     }
   }
-
 
   private async cacheDel(key: string): Promise<void> {
     try {
@@ -56,7 +50,6 @@ export class CategoriesService {
       );
     }
   }
-
 
   private async cacheReset(): Promise<void> {
     try {
@@ -69,7 +62,6 @@ export class CategoriesService {
           'categories:main',
         ];
 
-
         for (const key of commonKeys) {
           await this.cacheDel(key);
         }
@@ -80,18 +72,14 @@ export class CategoriesService {
     }
   }
 
-
   async create(createCategoryDto: Partial<Category>): Promise<Category> {
     try {
       this.logger.log(`Creating new category: ${createCategoryDto.name}`);
 
-
       const category = this.categoryRepository.create(createCategoryDto);
       const savedCategory = await this.categoryRepository.save(category);
 
-
       await this.cacheReset();
-
 
       this.logger.log(
         `Successfully created category with ID: ${savedCategory.id}`,
@@ -106,20 +94,16 @@ export class CategoriesService {
     }
   }
 
-
   async findAll(): Promise<Category[]> {
     const cacheKey = 'categories:all';
 
-
     try {
       let categories = await this.cacheGet<Category[]>(cacheKey);
-
 
       if (categories) {
         this.logger.debug('Categories retrieved from cache');
         return categories;
       }
-
 
       this.logger.log('Fetching all categories from database');
       categories = await this.categoryRepository.find({
@@ -130,12 +114,10 @@ export class CategoriesService {
         },
       });
 
-
       await this.cacheSet(cacheKey, categories, 600);
       this.logger.debug(
         `Cached ${categories.length} categories for 10 minutes`,
       );
-
 
       return categories;
     } catch (_error) {
@@ -147,20 +129,16 @@ export class CategoriesService {
     }
   }
 
-
   async findAllWithHierarchy(): Promise<Category[]> {
     const cacheKey = 'categories:hierarchy';
 
-
     try {
       let mainCategories = await this.cacheGet<Category[]>(cacheKey);
-
 
       if (mainCategories) {
         this.logger.debug('Category hierarchy retrieved from cache');
         return mainCategories;
       }
-
 
       this.logger.log('Fetching category hierarchy from database');
       mainCategories = await this.categoryRepository.find({
@@ -172,12 +150,10 @@ export class CategoriesService {
         },
       });
 
-
       await this.cacheSet(cacheKey, mainCategories, 900);
       this.logger.debug(
         `Cached hierarchy with ${mainCategories.length} main categories for 15 minutes`,
       );
-
 
       return mainCategories;
     } catch (_error) {
@@ -189,20 +165,16 @@ export class CategoriesService {
     }
   }
 
-
   async findOne(id: number): Promise<Category> {
     const cacheKey = `category:${id}`;
 
-
     try {
       const category = await this.cacheGet<Category>(cacheKey);
-
 
       if (category) {
         this.logger.debug(`Category ${id} retrieved from cache`);
         return category;
       }
-
 
       this.logger.log(`Fetching category ${id} from database`);
       const foundCategory = await this.categoryRepository.findOne({
@@ -210,16 +182,13 @@ export class CategoriesService {
         relations: ['products', 'subcategories', 'parent'],
       });
 
-
       if (!foundCategory) {
         this.logger.warn(`Category with ID ${id} not found`);
         throw new NotFoundException(`Category with ID ${id} not found`);
       }
 
-
       await this.cacheSet(cacheKey, foundCategory, 300);
       this.logger.debug(`Cached category ${id} for 5 minutes`);
-
 
       return foundCategory;
     } catch (_error) {
@@ -234,14 +203,11 @@ export class CategoriesService {
     }
   }
 
-
   async findByParentId(parentId: number | null): Promise<Category[]> {
     const cacheKey = `categories:parent:${parentId || 'null'}`;
 
-
     try {
       let categories = await this.cacheGet<Category[]>(cacheKey);
-
 
       if (categories) {
         this.logger.debug(
@@ -250,19 +216,16 @@ export class CategoriesService {
         return categories;
       }
 
-
       categories = await this.categoryRepository.find({
         where: parentId === null ? { parentId: IsNull() } : { parentId },
         relations: ['subcategories'],
         order: { displayOrder: 'ASC', name: 'ASC' },
       });
 
-
       await this.cacheSet(cacheKey, categories, 600);
       this.logger.debug(
         `Cached ${categories.length} categories with parent ${parentId} for 10 minutes`,
       );
-
 
       return categories;
     } catch (_error) {
@@ -274,7 +237,6 @@ export class CategoriesService {
     }
   }
 
-
   async getCategoryProducts(
     categoryId: number,
     page: number = 1,
@@ -284,10 +246,8 @@ export class CategoriesService {
   ) {
     const cacheKey = `category:${categoryId}:products:${page}:${limit}:${search || 'none'}:${sortBy || 'date'}`;
 
-
     try {
       let result = await this.cacheGet<any>(cacheKey);
-
 
       if (result) {
         this.logger.debug(
@@ -296,38 +256,31 @@ export class CategoriesService {
         return result;
       }
 
-
       const startTime = Date.now();
       this.logger.log(
         `Fetching products for category ${categoryId}, page ${page}`,
       );
-
 
       const category = await this.categoryRepository.findOne({
         where: { id: categoryId },
         relations: ['subcategories'],
       });
 
-
       if (!category) {
         throw new NotFoundException(`Category with ID ${categoryId} not found`);
       }
 
-
       const skip = (page - 1) * limit;
-
 
       const categoryIds = [categoryId];
       if (category.subcategories) {
         categoryIds.push(...category.subcategories.map((sub) => sub.id));
       }
 
-
       let queryBuilder = this.productRepository
         .createQueryBuilder('product')
         .leftJoinAndSelect('product.category', 'category')
         .where('product.categoryId IN (:...categoryIds)', { categoryIds });
-
 
       if (search && search.trim()) {
         queryBuilder = queryBuilder.andWhere(
@@ -335,7 +288,6 @@ export class CategoriesService {
           { search: `%${search.trim()}%` },
         );
       }
-
 
       switch (sortBy) {
         case 'price':
@@ -353,12 +305,10 @@ export class CategoriesService {
           break;
       }
 
-
       const [products, total] = await queryBuilder
         .skip(skip)
         .take(limit)
         .getManyAndCount();
-
 
       result = {
         products,
@@ -368,15 +318,12 @@ export class CategoriesService {
         currentPage: page,
       };
 
-
       await this.cacheSet(cacheKey, result, 180);
-
 
       const duration = Date.now() - startTime;
       this.logger.log(
         `Fetched ${products.length} products for category ${categoryId} in ${duration}ms`,
       );
-
 
       return result;
     } catch (_error) {
@@ -391,7 +338,6 @@ export class CategoriesService {
     }
   }
 
-
   async update(
     id: number,
     updateCategoryDto: Partial<Category>,
@@ -399,14 +345,11 @@ export class CategoriesService {
     try {
       this.logger.log(`Updating category ${id}`);
 
-
       const category = await this.findOne(id);
       Object.assign(category, updateCategoryDto);
       const updatedCategory = await this.categoryRepository.save(category);
 
-
       await this.cacheReset();
-
 
       this.logger.log(`Successfully updated category ${id}`);
       return updatedCategory;
@@ -419,14 +362,11 @@ export class CategoriesService {
     }
   }
 
-
   async remove(id: number): Promise<void> {
     try {
       this.logger.log(`Removing category ${id}`);
 
-
       const category = await this.findOne(id);
-
 
       if (category.subcategories && category.subcategories.length > 0) {
         await this.categoryRepository.update(
@@ -438,12 +378,9 @@ export class CategoriesService {
         );
       }
 
-
       await this.categoryRepository.remove(category);
 
-
       await this.cacheReset();
-
 
       this.logger.log(`Successfully removed category ${id}`);
     } catch (_error) {
@@ -455,7 +392,6 @@ export class CategoriesService {
     }
   }
 
-
   async createSubcategory(
     parentId: number,
     subcategoryData: Partial<Category>,
@@ -463,21 +399,16 @@ export class CategoriesService {
     try {
       this.logger.log(`Creating subcategory for parent ${parentId}`);
 
-
       const parentCategory = await this.findOne(parentId);
-
 
       const subcategory = this.categoryRepository.create({
         ...subcategoryData,
         parentId: parentCategory.id,
       });
 
-
       const savedSubcategory = await this.categoryRepository.save(subcategory);
 
-
       await this.cacheReset();
-
 
       this.logger.log(
         `Successfully created subcategory ${savedSubcategory.id} for parent ${parentId}`,
@@ -492,20 +423,16 @@ export class CategoriesService {
     }
   }
 
-
   async getMainCategories(): Promise<Category[]> {
     const cacheKey = 'categories:main';
 
-
     try {
       let categories = await this.cacheGet<Category[]>(cacheKey);
-
 
       if (categories) {
         this.logger.debug('Main categories retrieved from cache');
         return categories;
       }
-
 
       categories = await this.categoryRepository.find({
         where: { parentId: IsNull() },
@@ -513,12 +440,10 @@ export class CategoriesService {
         order: { displayOrder: 'ASC', name: 'ASC' },
       });
 
-
       await this.cacheSet(cacheKey, categories, 900);
       this.logger.debug(
         `Cached ${categories.length} main categories for 15 minutes`,
       );
-
 
       return categories;
     } catch (_error) {
@@ -530,11 +455,9 @@ export class CategoriesService {
     }
   }
 
-
   async getSubcategoriesByParent(parentId: number): Promise<Category[]> {
     return this.findByParentId(parentId);
   }
-
 
   async getHealthStatus(): Promise<{
     status: string;
@@ -545,13 +468,11 @@ export class CategoriesService {
     try {
       const categoriesCount = await this.categoryRepository.count();
 
-
       let cacheStatus = 'healthy';
       try {
         await this.cacheSet('health-check', 'test', 10);
         const testValue = await this.cacheGet('health-check');
         await this.cacheDel('health-check');
-
 
         if (testValue !== 'test') {
           cacheStatus = 'unhealthy';
@@ -560,7 +481,6 @@ export class CategoriesService {
         this.logger.warn(`Cache health check failed: ${cacheError.message}`);
         cacheStatus = 'unhealthy';
       }
-
 
       return {
         status: 'healthy',
@@ -579,7 +499,6 @@ export class CategoriesService {
     }
   }
 
-
   async warmCache(): Promise<void> {
     try {
       this.logger.log('Warming up category cache...');
@@ -590,7 +509,10 @@ export class CategoriesService {
       ]);
       this.logger.log('Category cache warmed successfully');
     } catch (_error) {
-      this.logger.error(`Cache warming failed: ${_error.message}`, _error.stack);
+      this.logger.error(
+        `Cache warming failed: ${_error.message}`,
+        _error.stack,
+      );
     }
   }
 }

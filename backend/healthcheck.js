@@ -4,7 +4,7 @@ const options = {
   host: 'localhost',
   port: process.env.PORT || 3001,
   path: '/api/health',
-  timeout: 2000
+  timeout: 2000,
 };
 
 const request = http.request(options, (res) => {
@@ -16,7 +16,7 @@ const request = http.request(options, (res) => {
   }
 });
 
-request.on('error', function(err) {
+request.on('error', function (err) {
   console.log('ERROR', err);
   process.exit(1);
 });

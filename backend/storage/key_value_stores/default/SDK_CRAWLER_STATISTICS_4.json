@@ -13,12 +13,7 @@
   "statsPersistedAt": "2025-09-23T18:21:01.794Z",
   "crawlerRuntimeMillis": 7150,
   "crawlerLastStartTimestamp": 1758651654644,
-  "requestRetryHistogram": [
-    null,
-    null,
-    null,
-    1
-  ],
+  "requestRetryHistogram": [null, null, null, 1],
   "statsId": 4,
   "requestAvgFailedDurationMillis": 1522,
   "requestAvgFinishedDurationMillis": null,
