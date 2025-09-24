@@ -1,4 +1,4 @@
-const http = require('http');
+const http = require('http'); // eslint-disable-line @typescript-eslint/no-require-imports
 
 const options = {
   host: 'localhost',

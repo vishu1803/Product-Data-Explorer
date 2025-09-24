@@ -1,6 +1,6 @@
 'use client';
 
-import { Mail, MessageSquare, Github, Linkedin, Send, MapPin, Phone, Clock } from 'lucide-react';
+import { Mail, MessageSquare, Github, Send, Clock } from 'lucide-react';
 import { useState } from 'react';
 
 export default function ContactPage() {
@@ -34,7 +34,7 @@ export default function ContactPage() {
           <h1 className="text-5xl font-bold text-gray-900 mb-6">Get In Touch</h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Have questions about the Product Data Explorer? Want to discuss the implementation 
-            or provide feedback? I'd love to hear from you!
+            or provide feedback? I&apos;d love to hear from you!
           </p>
         </div>
 
@@ -208,7 +208,7 @@ export default function ContactPage() {
             
             <div className="text-left">
               <h3 className="font-semibold text-gray-900 mb-2">Can I use this code?</h3>
-              <p className="text-gray-600 text-sm">This is primarily a portfolio project. Please contact me if you're interested in discussing the implementation or similar projects.</p>
+              <p className="text-gray-600 text-sm">This is primarily a portfolio project. Please contact me if you&apos;re interested in discussing the implementation or similar projects.</p>
             </div>
             
             <div className="text-left">

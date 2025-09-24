@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCategoryProducts } from '@/lib/swr-config';
 import { useNavigationHistory } from '@/hooks/useNavigationHistory';
@@ -278,7 +278,7 @@ export default function CategoryPage() {
                 </p>
               ) : (
                 <p className="text-sm text-gray-600">
-                  {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'} found for "{searchTerm}"
+                  {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'} found for &quot;{searchTerm}&quot;
                   {filteredProducts.length === 0 && (
                     <span className="ml-2">
                       <button
@@ -308,7 +308,7 @@ export default function CategoryPage() {
               <>
                 <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  No products found for "{searchTerm}"
+                  No products found for &quot;{searchTerm}&quot;
                 </h3>
                 <p className="text-gray-600 mb-4">Try searching with different keywords</p>
                 <button
@@ -336,7 +336,7 @@ export default function CategoryPage() {
         ) : (
           <>
             <div className={`grid ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'} gap-6 mb-8`}>
-              {filteredProducts.map((product, index) => (
+              {filteredProducts.map((product) => (
                 <div key={product.id} className="animate-fade-in-up">
                   <ProductCard product={product} />
                 </div>

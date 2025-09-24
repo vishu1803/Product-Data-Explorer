@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 
 interface NavigationState {
@@ -14,6 +14,26 @@ export function useNavigationHistory() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [navigationHistory, setNavigationHistory] = useState<NavigationState[]>([]);
+
+  const saveNavigationToBackend = useCallback(async (state: NavigationState) => {
+    try {
+      await fetch('http://localhost:3001/api/user-navigation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: getUserId(), // Simple user ID
+          path: state.path,
+          searchParams: state.searchParams,
+          timestamp: state.timestamp,
+          title: state.title,
+        }),
+      });
+    } catch (error) {
+      console.warn('Failed to save navigation to backend:', error);
+    }
+  }, []);
 
   useEffect(() => {
     // Only run on client side
@@ -46,27 +66,7 @@ export function useNavigationHistory() {
 
     // Send to backend for persistence
     saveNavigationToBackend(currentState);
-  }, [pathname, searchParams]);
-
-  const saveNavigationToBackend = async (state: NavigationState) => {
-    try {
-      await fetch('http://localhost:3001/api/user-navigation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: getUserId(), // Simple user ID
-          path: state.path,
-          searchParams: state.searchParams,
-          timestamp: state.timestamp,
-          title: state.title,
-        }),
-      });
-    } catch (error) {
-      console.warn('Failed to save navigation to backend:', error);
-    }
-  };
+  }, [pathname, searchParams, saveNavigationToBackend]);
 
   const getUserId = () => {
     // ✅ Check if running on client side

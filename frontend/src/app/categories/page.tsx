@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { categoryApi, scrapingApi, Category } from '@/lib/api';
 import { RefreshCw, Download, BookOpen, Search, AlertCircle, CheckCircle, Eye, ChevronDown, ChevronRight, Folder, X } from 'lucide-react';
 import Link from 'next/link';
@@ -8,6 +8,11 @@ import Link from 'next/link';
 interface CategoryWithSubcategories extends Category {
   subcategories?: Category[];
   isExpanded?: boolean;
+}
+
+interface ApiError {
+  message: string;
+  status?: number;
 }
 
 export default function CategoriesPage() {
@@ -20,28 +25,7 @@ export default function CategoriesPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  useEffect(() => {
-    if (searchTerm && searchTerm.length >= 2) {
-      const searchLower = searchTerm.toLowerCase().trim();
-      const filtered = categories.filter(category =>
-        category.name.toLowerCase().includes(searchLower) ||
-        category.description?.toLowerCase().includes(searchLower) ||
-        category.subcategories?.some(sub => 
-          sub.name.toLowerCase().includes(searchLower) ||
-          sub.description?.toLowerCase().includes(searchLower)
-        )
-      );
-      setFilteredCategories(filtered);
-    } else if (searchTerm.length < 2) {
-      setFilteredCategories(categories);
-    }
-  }, [searchTerm, categories]);
-
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -66,7 +50,28 @@ export default function CategoriesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
+
+  useEffect(() => {
+    if (searchTerm && searchTerm.length >= 2) {
+      const searchLower = searchTerm.toLowerCase().trim();
+      const filtered = categories.filter(category =>
+        category.name.toLowerCase().includes(searchLower) ||
+        category.description?.toLowerCase().includes(searchLower) ||
+        category.subcategories?.some(sub => 
+          sub.name.toLowerCase().includes(searchLower) ||
+          sub.description?.toLowerCase().includes(searchLower)
+        )
+      );
+      setFilteredCategories(filtered);
+    } else if (searchTerm.length < 2) {
+      setFilteredCategories(categories);
+    }
+  }, [searchTerm, categories]);
 
   // Separate refresh function
   const handleRefresh = async () => {
@@ -89,9 +94,10 @@ export default function CategoriesPage() {
       } else {
         setError('Failed to scrape categories');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error scraping categories:', error);
-      setError(`Failed to scrape categories: ${error.message || 'Unknown error'}`);
+      const apiError = error as ApiError;
+      setError(`Failed to scrape categories: ${apiError.message || 'Unknown error'}`);
     } finally {
       setScraping(false);
     }
@@ -104,9 +110,10 @@ export default function CategoriesPage() {
       setError(null);
       await scrapingApi.scrapeProducts(categoryId);
       setSuccess(`Successfully scraped products for ${categoryName}!`);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error scraping products:', error);
-      setError(`Failed to scrape products for ${categoryName}`);
+      const apiError = error as ApiError;
+      setError(`Failed to scrape products for ${categoryName}: ${apiError.message || 'Unknown error'}`);
     } finally {
       setScrapingProducts(null);
     }
@@ -336,8 +343,8 @@ export default function CategoriesPage() {
       value={searchTerm}
       onChange={(e) => setSearchTerm(e.target.value)}
       style={{
-        position: 'relative',    // ✅ Explicit positioning
-        zIndex: 10,             // ✅ Explicit z-index
+        position: 'relative',
+        zIndex: 10,
         width: '100%',
         height: '48px',
         paddingLeft: '40px',
@@ -398,12 +405,11 @@ export default function CategoriesPage() {
     )}
     {searchTerm.length >= 2 && (
       <p style={{ fontSize: '14px', color: '#2563eb', textAlign: 'center' }}>
-        Found {filteredCategories.length} categories matching "{searchTerm}"
+        Found {filteredCategories.length} categories matching &quot;{searchTerm}&quot;
       </p>
     )}
   </div>
 </div>
-
 
           {/* ✅ Accessibility: Stats with proper labeling */}
           <div className="flex justify-center items-center space-x-6 text-sm text-gray-600" role="status" aria-live="polite">

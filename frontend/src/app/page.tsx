@@ -1,8 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { categoryApi, scrapingApi, Category } from '@/lib/api';
 import { RefreshCw, Database, Globe, AlertCircle, CheckCircle } from 'lucide-react';
+
+interface ApiError {
+  message: string;
+  status?: number;
+}
 
 export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -11,11 +16,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -27,7 +28,11 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
 
   const handleScrapeCategories = async () => {
     try {
@@ -42,9 +47,10 @@ export default function Home() {
       // Reload categories after scraping
       await loadCategories();
       setSuccess('Successfully scraped and saved new categories!');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error scraping categories:', error);
-      setError(`Failed to scrape categories: ${error.message || 'Unknown error'}`);
+      const apiError = error as ApiError;
+      setError(`Failed to scrape categories: ${apiError.message || 'Unknown error'}`);
     } finally {
       setScraping(false);
     }

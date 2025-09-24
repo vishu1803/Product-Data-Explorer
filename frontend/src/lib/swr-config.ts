@@ -1,5 +1,4 @@
 import useSWR from 'swr';
-import { categoryApi, productApi } from './api';
 
 // SWR fetcher function
 const fetcher = (url: string) => fetch(url).then((res) => res.json());

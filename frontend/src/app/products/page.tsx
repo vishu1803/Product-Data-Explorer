@@ -1,12 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { productApi, categoryApi, scrapingApi, Product, Category } from '@/lib/api';
 import { Search, Grid, List, Package, Download, RefreshCw, AlertCircle, CheckCircle, X } from 'lucide-react';
 import Link from 'next/link';
 
 type SortOption = 'date' | 'price' | 'rating' | 'title';
 type ViewMode = 'grid' | 'list';
+
+interface ApiError {
+  message: string;
+  status?: number;
+}
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -25,17 +30,7 @@ export default function ProductsPage() {
   const productsPerPage = 12;
   const totalPages = Math.ceil(totalProducts / productsPerPage);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  useEffect(() => {
-    if (categories.length > 0) {
-      loadProducts();
-    }
-  }, [currentPage, searchTerm, sortBy, categories]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -57,9 +52,9 @@ export default function ProductsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, productsPerPage, searchTerm, sortBy]);
 
-  const loadProducts = async () => {
+  const loadProducts = useCallback(async () => {
     try {
       const response = await productApi.getAll(currentPage, productsPerPage, searchTerm, sortBy);
       setProducts(response.data.products || []);
@@ -68,7 +63,17 @@ export default function ProductsPage() {
       console.error('Error loading products:', error);
       setProducts([]);
     }
-  };
+  }, [currentPage, productsPerPage, searchTerm, sortBy]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  useEffect(() => {
+    if (categories.length > 0) {
+      loadProducts();
+    }
+  }, [categories, loadProducts]);
 
   const handleScrapeAllProducts = async () => {
     if (categories.length === 0) {
@@ -105,9 +110,10 @@ export default function ProductsPage() {
           // ✅ Small delay between categories to avoid overwhelming the server
           await new Promise(resolve => setTimeout(resolve, 2000));
           
-        } catch (categoryError: any) {
+        } catch (categoryError) {
           errorCount++;
-          console.error(`❌ Failed to scrape ${category.name}:`, categoryError.message);
+          const apiError = categoryError as ApiError;
+          console.error(`❌ Failed to scrape ${category.name}:`, apiError.message);
           // Continue with next category instead of stopping
         }
       }
@@ -125,9 +131,10 @@ export default function ProductsPage() {
         setError(`Failed to scrape products from all ${errorCount} categories. Check backend logs.`);
       }
       
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ Overall scraping error:', error);
-      setError(`Failed to scrape products: ${error.message || 'Unknown error'}`);
+      const apiError = error as ApiError;
+      setError(`Failed to scrape products: ${apiError.message || 'Unknown error'}`);
     } finally {
       setScraping(false);
       setScrapingCategory(null);
@@ -153,12 +160,13 @@ export default function ProductsPage() {
       setSuccess(`Successfully scraped products from ${categoryName}!`);
       console.log(`✅ Successfully scraped ${categoryName}`);
       
-    } catch (error: any) {
+    } catch (error) {
       console.error(`❌ Error scraping ${categoryName}:`, error);
-      if (error.message.includes('Timeout')) {
+      const apiError = error as ApiError;
+      if (apiError.message?.includes('Timeout')) {
         setError(`Scraping ${categoryName} is taking longer than expected. Please try again or check backend logs.`);
       } else {
-        setError(`Failed to scrape ${categoryName}: ${error.message || 'Unknown error'}`);
+        setError(`Failed to scrape ${categoryName}: ${apiError.message || 'Unknown error'}`);
       }
     } finally {
       setScrapingCategory(null);
@@ -400,7 +408,7 @@ export default function ProductsPage() {
             <p className="text-gray-600 mb-6">
               {searchTerm ? (
                 <>
-                  No products found for "{searchTerm}". Try adjusting your search terms or{' '}
+                  No products found for &quot;{searchTerm}&quot;. Try adjusting your search terms or{' '}
                   <button 
                     onClick={() => setSearchTerm('')}
                     className="text-blue-600 hover:text-blue-800 font-medium underline"
@@ -424,7 +432,7 @@ export default function ProductsPage() {
         ) : (
           <>
             <div className={`grid ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'} gap-6 mb-8`}>
-              {products.map((product, index) => (
+              {products.map((product) => (
                 <Link href={`/products/${product.id}`} key={product.id}>
                   <div className="card card-hover p-6 cursor-pointer">
                     <div className="aspect-square bg-gray-200 rounded-lg mb-4 flex items-center justify-center">

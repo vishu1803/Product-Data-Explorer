@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { productApi, scrapingApi, Product, ProductReview } from '@/lib/api';
 import { 
@@ -9,6 +9,11 @@ import {
   MessageCircle, ThumbsUp, ShoppingCart, RefreshCw
 } from 'lucide-react';
 import Link from 'next/link';
+
+interface ApiError {
+  message: string;
+  status?: number;
+}
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -21,13 +26,7 @@ export default function ProductDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'reviews' | 'details'>('overview');
 
-  useEffect(() => {
-    if (productId) {
-      loadProductDetails();
-    }
-  }, [productId]);
-
-  const loadProductDetails = async () => {
+  const loadProductDetails = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -45,7 +44,13 @@ export default function ProductDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [productId]);
+
+  useEffect(() => {
+    if (productId) {
+      loadProductDetails();
+    }
+  }, [productId, loadProductDetails]);
 
   const handleScrapeDetails = async () => {
     if (!product) return;
@@ -56,6 +61,8 @@ export default function ProductDetailPage() {
       await loadProductDetails();
     } catch (error) {
       console.error('Error scraping product details:', error);
+      const apiError = error as ApiError;
+      setError(`Failed to scrape details: ${apiError.message || 'Unknown error'}`);
     } finally {
       setScrapingDetails(false);
     }
@@ -271,7 +278,7 @@ export default function ProductDetailPage() {
               ].map(({ id, name, icon: Icon }) => (
                 <button
                   key={id}
-                  onClick={() => setActiveTab(id as any)}
+                  onClick={() => setActiveTab(id as 'overview' | 'reviews' | 'details')}
                   className={`flex items-center py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
                     activeTab === id
                       ? 'border-blue-500 text-blue-600'
