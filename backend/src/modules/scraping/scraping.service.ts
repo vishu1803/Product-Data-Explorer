@@ -1,3 +1,9 @@
+
+interface ErrorWithMessage {
+  message: string;
+  stack?: string;
+}
+
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -102,9 +108,9 @@ export class ScrapingService {
             savedCategories.push(existing);
             this.logger.log(`ℹ️ Category already exists: ${existing.name}`);
           }
-        } catch (error) {
+        } catch (_error) {
           this.logger.error(
-            `❌ Error saving category ${categoryData.name}: ${error.message}`,
+            `❌ Error saving category ${categoryData.name}: ${_error.message}`,
           );
         }
       }
@@ -113,10 +119,10 @@ export class ScrapingService {
         `🎉 Successfully scraped ${savedCategories.length} REAL categories from World of Books`,
       );
       return savedCategories;
-    } catch (error) {
-      this.logger.error(`💥 Real category scraping failed: ${error.message}`);
+    } catch (_error) {
+      this.logger.error(`💥 Real category scraping failed: ${_error.message}`);
       throw new Error(
-        `Assignment requirement failed: Cannot scrape categories from World of Books. ${error.message}`,
+        `Assignment requirement failed: Cannot scrape categories from World of Books. ${_error.message}`,
       );
     }
   }
@@ -198,8 +204,8 @@ export class ScrapingService {
                   helpfulCount: reviewData.helpfulCount,
                   productId: saved.id,
                 });
-              } catch (error) {
-                this.logger.warn(`⚠️ Failed to save review: ${error.message}`);
+              } catch (_error) {
+                this.logger.warn(`⚠️ Failed to save review: ${_error.message}`);
               }
             }
             this.logger.log(
@@ -211,9 +217,9 @@ export class ScrapingService {
           this.logger.log(
             `✅ Scraped and saved detailed product: ${productData.title}`,
           );
-        } catch (error) {
+        } catch (_error) {
           this.logger.error(
-            `❌ Error saving product ${productData.title}: ${error.message}`,
+            `❌ Error saving product ${productData.title}: ${_error.message}`,
           );
         }
       }
@@ -222,10 +228,10 @@ export class ScrapingService {
         `🎉 Successfully scraped ${savedProducts.length} REAL products with details from World of Books`,
       );
       return savedProducts;
-    } catch (error) {
-      this.logger.error(`💥 Real product scraping failed: ${error.message}`);
+    } catch (_error) {
+      this.logger.error(`💥 Real product scraping failed: ${_error.message}`);
       throw new Error(
-        `Assignment requirement failed: Cannot scrape products from World of Books. ${error.message}`,
+        `Assignment requirement failed: Cannot scrape products from World of Books. ${_error.message}`,
       );
     }
   }
@@ -286,11 +292,11 @@ export class ScrapingService {
       }
 
       return product;
-    } catch (error) {
+    } catch (_error) {
       this.logger.error(
-        `💥 Failed to scrape product details: ${error.message}`,
+        `💥 Failed to scrape product details: ${_error.message}`,
       );
-      throw error;
+      throw _error;
     }
   }
 
@@ -360,9 +366,9 @@ export class ScrapingService {
           }
 
           this.logger.log(`🎯 Total categories found: ${categories.length}`);
-        } catch (error) {
+        } catch (_error) {
           this.logger.error(
-            `💥 Error during category scraping: ${error.message}`,
+            `💥 Error during category scraping: ${_error.message}`,
           );
         }
       },
@@ -388,8 +394,8 @@ export class ScrapingService {
           );
           break;
         }
-      } catch (error) {
-        this.logger.warn(`⚠️ Failed to scrape from ${url}: ${error.message}`);
+      } catch (_error) {
+        this.logger.warn(`⚠️ Failed to scrape from ${url}: ${_error.message}`);
       }
     }
 
@@ -440,7 +446,7 @@ export class ScrapingService {
             },
           ];
 
-          let productElements: any[] = [];
+          let productElements: unknown[] = [];
 
           for (const strategy of productStrategies) {
             productElements = await strategy();
@@ -470,9 +476,9 @@ export class ScrapingService {
                       // Merge basic and detailed data
                       Object.assign(productData, detailedData);
                     }
-                  } catch (error) {
+                  } catch (_error) {
                     this.logger.warn(
-                      `⚠️ Failed to get detailed data for ${productData.title}: ${error.message}`,
+                      `⚠️ Failed to get detailed data for ${productData.title}: ${_error.message}`,
                     );
                   }
                 }
@@ -482,14 +488,14 @@ export class ScrapingService {
                   `📦 Found detailed product: ${productData.title}`,
                 );
               }
-            } catch (error) {
+            } catch (_error) {
               this.logger.warn(
-                `⚠️ Error extracting product ${i}: ${error.message}`,
+                `⚠️ Error extracting product ${i}: ${_error.message}`,
               );
             }
           }
-        } catch (error) {
-          this.logger.error(`💥 Error scraping products: ${error.message}`);
+        } catch (_error) {
+          this.logger.error(`💥 Error scraping products: ${_error.message}`);
         }
       },
       maxRequestsPerCrawl: 1,
@@ -513,8 +519,8 @@ export class ScrapingService {
           if (products.length > 0) break;
         }
       }
-    } catch (error) {
-      this.logger.error(`💥 Product scraping failed: ${error.message}`);
+    } catch (_error) {
+      this.logger.error(`💥 Product scraping failed: ${_error.message}`);
     }
 
     this.logger.log(`📦 Total detailed products scraped: ${products.length}`);
@@ -526,7 +532,7 @@ export class ScrapingService {
   ): Promise<Partial<ScrapedProduct> | null> {
     this.logger.log(`🔍 Scraping detailed product page: ${productUrl}`);
 
-    let detailedData: Partial<ScrapedProduct> = {};
+    const detailedData: Partial<ScrapedProduct> = {};
 
     const crawler = new PlaywrightCrawler({
       requestHandler: async ({ page, request }) => {
@@ -782,9 +788,9 @@ export class ScrapingService {
           }
 
           this.logger.log(`✅ Extracted detailed product data`);
-        } catch (error) {
+        } catch (_error) {
           this.logger.error(
-            `💥 Error scraping detailed product data: ${error.message}`,
+            `💥 Error scraping detailed product data: ${_error.message}`,
           );
         }
       },
@@ -796,9 +802,9 @@ export class ScrapingService {
     try {
       await crawler.run([productUrl]);
       return detailedData;
-    } catch (error) {
+    } catch (_error) {
       this.logger.error(
-        `💥 Failed to scrape detailed product data: ${error.message}`,
+        `💥 Failed to scrape detailed product data: ${_error.message}`,
       );
       return null;
     }
@@ -938,8 +944,8 @@ export class ScrapingService {
         rating: Math.round((3.5 + Math.random() * 1.5) * 10) / 10,
         reviewCount: Math.floor(Math.random() * 200) + 10,
       };
-    } catch (error) {
-      this.logger.warn(`Error in extractProductData: ${error.message}`);
+    } catch (_error) {
+      this.logger.warn(`Error in extractProductData: ${_error.message}`);
       return null;
     }
   }
@@ -1035,7 +1041,7 @@ export class ScrapingService {
 
       const price = parseFloat(numericValue);
       return isNaN(price) || price <= 0 ? null : Math.round(price * 100) / 100;
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   }

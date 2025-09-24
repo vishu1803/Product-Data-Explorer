@@ -1,3 +1,9 @@
+
+interface ErrorWithMessage {
+  message: string;
+  stack?: string;
+}
+
 import { Controller, Post, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { ScrapingService } from './scraping.service';
 
@@ -25,10 +31,10 @@ export class ScrapingController {
         message: `Successfully scraped ${categories.length} categories`,
         data: categories,
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         success: false,
-        message: `Failed to scrape categories: ${error.message}`,
+        message: `Failed to scrape categories: ${_error.message}`,
         data: [],
       };
     }
@@ -43,10 +49,10 @@ export class ScrapingController {
         message: `Successfully scraped ${products.length} products with detailed information`,
         data: products,
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         success: false,
-        message: `Failed to scrape products: ${error.message}`,
+        message: `Failed to scrape products: ${_error.message}`,
         data: [],
       };
     }
@@ -64,10 +70,10 @@ export class ScrapingController {
         message: 'Successfully scraped detailed product information',
         data: product,
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         success: false,
-        message: `Failed to scrape product details: ${error.message}`,
+        message: `Failed to scrape product details: ${_error.message}`,
         data: null,
       };
     }

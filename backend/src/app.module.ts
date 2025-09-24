@@ -18,33 +18,38 @@ import { AppController } from './app.controller';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    
+
     // ✅ FIXED: Working Throttler configuration
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ([
+      useFactory: (configService: ConfigService) => [
         {
           ttl: parseInt(configService.get('THROTTLE_TTL', '60')),
           limit: parseInt(configService.get('THROTTLE_LIMIT', '100')),
-        }
-      ]),
+        },
+      ],
       inject: [ConfigService],
     }),
-    
+
     // ✅ FIXED: Working database configuration with security
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
         const nodeEnv = configService.get('NODE_ENV', 'development');
-        
+
         // ✅ Validate required environment variables
-        const requiredEnvVars = ['DB_HOST', 'DB_USERNAME', 'DB_PASSWORD', 'DB_DATABASE'];
+        const requiredEnvVars = [
+          'DB_HOST',
+          'DB_USERNAME',
+          'DB_PASSWORD',
+          'DB_DATABASE',
+        ];
         for (const envVar of requiredEnvVars) {
           if (!configService.get(envVar)) {
             console.warn(`Warning: Missing environment variable: ${envVar}`);
           }
         }
-        
+
         return {
           type: 'postgres',
           host: configService.get('DB_HOST', 'localhost'),
@@ -53,29 +58,33 @@ import { AppController } from './app.controller';
           password: configService.get('DB_PASSWORD', 'password'),
           database: configService.get('DB_DATABASE', 'product_explorer'),
           entities: [Category, Product],
-          
+
           // ✅ SECURE: Only sync in development
           synchronize: nodeEnv === 'development',
-          
+
           // ✅ SECURE: Appropriate logging
           logging: nodeEnv === 'development' ? ['error'] : false,
-          
+
           autoLoadEntities: true,
-          
+
           // ✅ SECURE: Connection pool settings
           extra: {
             max: parseInt(configService.get('DB_MAX_CONNECTIONS', '20')),
-            idleTimeoutMillis: parseInt(configService.get('DB_IDLE_TIMEOUT', '30000')),
-            connectionTimeoutMillis: parseInt(configService.get('DB_CONNECTION_TIMEOUT', '2000')),
+            idleTimeoutMillis: parseInt(
+              configService.get('DB_IDLE_TIMEOUT', '30000'),
+            ),
+            connectionTimeoutMillis: parseInt(
+              configService.get('DB_CONNECTION_TIMEOUT', '2000'),
+            ),
           },
-          
+
           // ✅ SECURE: SSL for production
           ssl: nodeEnv === 'production' ? { rejectUnauthorized: false } : false,
         };
       },
       inject: [ConfigService],
     }),
-    
+
     CategoriesModule,
     ProductsModule,
     ScrapingModule,

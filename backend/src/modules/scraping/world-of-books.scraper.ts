@@ -1,3 +1,9 @@
+
+interface ErrorWithMessage {
+  message: string;
+  stack?: string;
+}
+
 import { Injectable, Logger } from '@nestjs/common';
 import { PlaywrightCrawler } from '@crawlee/playwright';
 import { Page, ElementHandle } from 'playwright';
@@ -91,22 +97,22 @@ export class WorldOfBooksScraper {
                         }
                       }
                     }
-                  } catch (error) {
+                  } catch (_error) {
                     this.logger.warn(
-                      `Error processing element: ${error.message}`,
+                      `Error processing element: ${_error.message}`,
                     );
                   }
                 }
 
                 if (categories.length > 0) break; // Stop after finding categories
-              } catch (error) {
+              } catch (_error) {
                 this.logger.warn(
-                  `No elements found for selector ${selector}: ${error.message}`,
+                  `No elements found for selector ${selector}: ${_error.message}`,
                 );
               }
             }
-          } catch (error) {
-            this.logger.error(`Error scraping categories: ${error.message}`);
+          } catch (_error) {
+            this.logger.error(`Error scraping categories: ${_error.message}`);
           }
         },
         maxRequestsPerCrawl: 3,
@@ -125,8 +131,8 @@ export class WorldOfBooksScraper {
         try {
           await crawler.run([url]);
           if (categories.length > 0) break;
-        } catch (error) {
-          this.logger.error(`Failed to scrape ${url}: ${error.message}`);
+        } catch (_error) {
+          this.logger.error(`Failed to scrape ${url}: ${_error.message}`);
         }
       }
 
@@ -139,8 +145,8 @@ export class WorldOfBooksScraper {
         `Successfully scraped ${categories.length} real categories`,
       );
       return categories.slice(0, 12); // Limit to 12 categories
-    } catch (error) {
-      this.logger.error(`Category scraping failed: ${error.message}`);
+    } catch (_error) {
+      this.logger.error(`Category scraping failed: ${_error.message}`);
       return this.getFallbackCategories();
     }
   }
@@ -187,20 +193,20 @@ export class WorldOfBooksScraper {
                     if (product) {
                       products.push(product);
                     }
-                  } catch (error) {
+                  } catch (_error) {
                     this.logger.warn(
-                      `Error extracting product ${i}: ${error.message}`,
+                      `Error extracting product ${i}: ${_error.message}`,
                     );
                   }
                 }
 
                 if (products.length > 0) break;
-              } catch (error) {
+              } catch (_error) {
                 this.logger.warn(`No products found with selector ${selector}`);
               }
             }
-          } catch (error) {
-            this.logger.error(`Error scraping products: ${error.message}`);
+          } catch (_error) {
+            this.logger.error(`Error scraping products: ${_error.message}`);
           }
         },
         maxRequestsPerCrawl: 2,
@@ -217,8 +223,8 @@ export class WorldOfBooksScraper {
 
       this.logger.log(`Successfully scraped ${products.length} real products`);
       return products;
-    } catch (error) {
-      this.logger.error(`Product scraping failed: ${error.message}`);
+    } catch (_error) {
+      this.logger.error(`Product scraping failed: ${_error.message}`);
       return this.generateSampleProducts(categoryUrl, limit);
     }
   }
@@ -342,8 +348,8 @@ export class WorldOfBooksScraper {
       }
 
       return null;
-    } catch (error) {
-      this.logger.warn(`Error extracting product: ${error.message}`);
+    } catch (_error) {
+      this.logger.warn(`Error extracting product: ${_error.message}`);
       return null;
     }
   }
@@ -353,7 +359,7 @@ export class WorldOfBooksScraper {
       const cleaned = priceText.replace(/[^\d.,]/g, '');
       const price = parseFloat(cleaned);
       return isNaN(price) ? null : Math.round(price * 100) / 100;
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   }

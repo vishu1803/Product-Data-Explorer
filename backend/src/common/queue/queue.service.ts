@@ -1,3 +1,9 @@
+
+interface ErrorWithMessage {
+  message: string;
+  stack?: string;
+}
+
 import { Injectable } from '@nestjs/common';
 import { AppLoggerService } from '../logging/logger.service';
 
@@ -72,10 +78,10 @@ export class QueueService {
 
       job.status = 'completed';
       this.logger.log(`Completed job ${job.id}`, 'QueueService');
-    } catch (error) {
+    } catch (_error) {
       this.logger.error(
-        `Job ${job.id} failed: ${error.message}`,
-        error.stack,
+        `Job ${job.id} failed: ${_error.message}`,
+        _error.stack,
         'QueueService',
       );
 

@@ -1,3 +1,9 @@
+
+interface ErrorWithMessage {
+  message: string;
+  stack?: string;
+}
+
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -52,9 +58,9 @@ export class NavigationService {
 
       this.logger.log(`Saved navigation: ${data.userId} -> ${data.path}`);
       return saved;
-    } catch (error) {
-      this.logger.error(`Failed to save navigation: ${error.message}`);
-      throw error;
+    } catch (_error) {
+      this.logger.error(`Failed to save navigation: ${_error.message}`);
+      throw _error;
     }
   }
 
@@ -68,9 +74,9 @@ export class NavigationService {
         order: { timestamp: 'DESC' },
         take: limit,
       });
-    } catch (error) {
-      this.logger.error(`Failed to get user navigation: ${error.message}`);
-      throw error;
+    } catch (_error) {
+      this.logger.error(`Failed to get user navigation: ${_error.message}`);
+      throw _error;
     }
   }
 
@@ -97,9 +103,9 @@ export class NavigationService {
         uniquePaths,
         recentActivity,
       };
-    } catch (error) {
-      this.logger.error(`Failed to get navigation stats: ${error.message}`);
-      throw error;
+    } catch (_error) {
+      this.logger.error(`Failed to get navigation stats: ${_error.message}`);
+      throw _error;
     }
   }
 }

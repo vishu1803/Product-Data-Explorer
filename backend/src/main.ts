@@ -22,7 +22,7 @@ try {
   const swagger = require('@nestjs/swagger');
   DocumentBuilder = swagger.DocumentBuilder;
   SwaggerModule = swagger.SwaggerModule;
-} catch (error) {
+} catch (_error) {
   console.warn('Swagger not available, skipping API documentation setup');
 }
 
