@@ -15,11 +15,14 @@ export default function ProductCard({ product, showCategory = false }: ProductCa
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  // Determine the best image URL to use
+  // Determine the best image URL to use - FIXED FOR PRODUCTION
   const getImageUrl = () => {
     // Priority: Local image > Original image URL > Fallback
     if (product.imageLocalPath && !imageError) {
-      return `http://localhost:3001/static/images/products/${product.imageFilename}`;
+      // Use environment variable for backend URL
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+      const backendUrl = apiBaseUrl.replace('/api', '');
+      return `${backendUrl}/static/images/products/${product.imageFilename}`;
     }
     if (product.imageUrl && !imageError) {
       return product.imageUrl;

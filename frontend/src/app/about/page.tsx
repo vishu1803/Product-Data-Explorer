@@ -4,6 +4,12 @@ import { BookOpen, Database, Globe, Search, Star, Users, Award, Zap, Code } from
 import Link from 'next/link';
 
 export default function AboutPage() {
+  // Get API base URL for production
+  const getApiDocsUrl = () => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+    return apiUrl.replace('/api', '/api/docs');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -119,7 +125,7 @@ export default function AboutPage() {
                 </li>
               </ul>
               
-              {/* API Documentation Button - Integrated here */}
+              {/* API Documentation Button - FIXED */}
               <div className="mt-6 p-4 bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl border border-gray-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
@@ -132,7 +138,7 @@ export default function AboutPage() {
                     </div>
                   </div>
                   <a
-                    href="http://localhost:3001/api/docs"
+                    href={getApiDocsUrl()}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-3 py-1.5 bg-slate-600 text-white text-xs font-medium rounded-lg hover:bg-slate-700 transition-colors flex items-center gap-1"
@@ -171,7 +177,7 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Project Goals */}
+        {/* Project Goals - FIXED */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-8 text-white text-center">
           <h2 className="text-3xl font-bold mb-4">Project Goals</h2>
           <p className="text-xl mb-8 opacity-90 max-w-4xl mx-auto">
@@ -193,7 +199,7 @@ export default function AboutPage() {
               Browse Products
             </Link>
             <a
-              href="http://localhost:3001/api/docs"
+              href={getApiDocsUrl()}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-slate-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-slate-500 transition-colors border border-slate-500 flex items-center gap-2"

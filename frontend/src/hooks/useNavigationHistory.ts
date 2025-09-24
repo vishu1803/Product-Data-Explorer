@@ -17,7 +17,10 @@ export function useNavigationHistory() {
 
   const saveNavigationToBackend = useCallback(async (state: NavigationState) => {
     try {
-      await fetch('http://localhost:3001/api/user-navigation', {
+      // Use environment variable for backend URL - FIXED
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+      
+      await fetch(`${apiBaseUrl}/user-navigation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

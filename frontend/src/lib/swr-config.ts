@@ -1,5 +1,8 @@
 import useSWR from 'swr';
 
+// Get the API base URL from environment variables
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+
 // SWR fetcher function
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -19,7 +22,7 @@ export function useCategoryProducts(
   if (search) params.append('search', search);
   if (sortBy) params.append('sortBy', sortBy);
   
-  const swrKey = `http://localhost:3001/api/categories/${categoryId}/products?${params.toString()}`;
+  const swrKey = `${API_BASE_URL}/categories/${categoryId}/products?${params.toString()}`;
 
   const { data, error, mutate } = useSWR(
     categoryId ? swrKey : null,
@@ -54,7 +57,7 @@ export function useCategoryProducts(
 // Custom hook for all categories
 export function useCategories() {
   const { data, error, mutate } = useSWR(
-    'http://localhost:3001/api/categories',
+    `${API_BASE_URL}/categories`,
     fetcher,
     {
       refreshInterval: 0,
@@ -87,7 +90,7 @@ export function useProducts(
   if (search) params.append('search', search);
   if (sortBy) params.append('sortBy', sortBy);
   
-  const swrKey = `http://localhost:3001/api/products?${params.toString()}`;
+  const swrKey = `${API_BASE_URL}/products?${params.toString()}`;
 
   const { data, error, mutate } = useSWR(swrKey, fetcher, {
     refreshInterval: 0,
@@ -110,7 +113,7 @@ export function useProducts(
 // Custom hook for single product
 export function useProduct(productId: number) {
   const { data, error, mutate } = useSWR(
-    productId ? `http://localhost:3001/api/products/${productId}` : null,
+    productId ? `${API_BASE_URL}/products/${productId}` : null,
     fetcher,
     {
       refreshInterval: 0,
@@ -132,7 +135,7 @@ export function useProduct(productId: number) {
 // Custom hook for product reviews
 export function useProductReviews(productId: number) {
   const { data, error, mutate } = useSWR(
-    productId ? `http://localhost:3001/api/products/${productId}/reviews` : null,
+    productId ? `${API_BASE_URL}/products/${productId}/reviews` : null,
     fetcher,
     {
       refreshInterval: 0,
