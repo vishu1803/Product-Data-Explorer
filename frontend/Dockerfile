@@ -2,25 +2,24 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Install dependencies
-RUN apk add --no-cache curl
-
 # Copy package files
 COPY package*.json ./
-RUN npm ci
 
-# Copy source
+# Install dependencies
+RUN npm install
+
+# Copy source code
 COPY . .
 
-# Build application
+# Set environment variables for build
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Build the application
 RUN npm run build
 
 # Expose port
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=60s --timeout=10s --start-period=60s --retries=3 \
-  CMD curl -f http://localhost:3000 || exit 1
-
-# Start application
+# Start the application
 CMD ["npm", "start"]
