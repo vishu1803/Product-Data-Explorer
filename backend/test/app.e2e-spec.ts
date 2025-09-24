@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
+import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
 
 describe('AppController (e2e)', () => {
@@ -22,10 +22,22 @@ describe('AppController (e2e)', () => {
   });
 
   it('/ (GET)', async () => {
-    return request(app.getHttpServer()).get('/').expect(200);
+    const response = await request(app.getHttpServer()).get('/');
+    expect(response.status).toBe(200);
   });
 
   it('should be defined', () => {
     expect(app).toBeDefined();
+  });
+
+  it('/api/categories (GET)', async () => {
+    const response = await request(app.getHttpServer()).get('/api/categories');
+    expect(response.status).toBe(200);
+    expect(Array.isArray(response.body)).toBe(true);
+  });
+
+  it('/api/health (GET)', async () => {
+    const response = await request(app.getHttpServer()).get('/api/health');
+    expect(response.status).toBe(200);
   });
 });

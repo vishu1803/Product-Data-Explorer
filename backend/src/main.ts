@@ -1,32 +1,34 @@
-const crypto = require('crypto');
-if (!global.crypto) {
-  global.crypto = crypto.webcrypto;
-}
-if (!crypto.randomUUID) {
-  crypto.randomUUID = () => crypto.randomBytes(16).toString('hex');
-}
-
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
 
-// Security and Rate Limiting
+// Simple crypto polyfill
+const cryptoModule = require('crypto');
+if (!(globalThis as any).crypto) {
+  (globalThis as any).crypto = cryptoModule.webcrypto;
+}
+if (!cryptoModule.randomUUID) {
+  cryptoModule.randomUUID = () => cryptoModule.randomBytes(16).toString('hex');
+}
+
+// Security and Rate Limiting with require (safer for now)
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
+const fs = require('fs');
 
 // Conditional import for Swagger
-let DocumentBuilder, SwaggerModule;
+let DocumentBuilder: any, SwaggerModule: any;
 try {
   const swagger = require('@nestjs/swagger');
   DocumentBuilder = swagger.DocumentBuilder;
   SwaggerModule = swagger.SwaggerModule;
-} catch (_error) {
+} catch (error) {
   console.warn('Swagger not available, skipping API documentation setup');
 }
 
-async function bootstrap() {
+async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // ✅ Security headers
@@ -138,7 +140,7 @@ async function bootstrap() {
 
   // Create public directory if it doesn't exist
   const publicPath = join(__dirname, '..', 'public', 'images', 'products');
-  const fs = require('fs');
+  
   if (!fs.existsSync(publicPath)) {
     fs.mkdirSync(publicPath, { recursive: true });
     console.log('📁 Created public/images/products directory');
@@ -163,4 +165,8 @@ async function bootstrap() {
     `📁 Static images: http://localhost:${port}/static/images/products/`,
   );
 }
-bootstrap();
+
+bootstrap().catch((error: unknown) => {
+  console.error('💥 Failed to start server:', error);
+  process.exit(1);
+});

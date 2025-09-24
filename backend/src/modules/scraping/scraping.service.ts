@@ -10,6 +10,7 @@ import { Category } from '../categories/category.entity';
 import { Product } from '../products/product.entity';
 import { ProductReview } from '../products/product-review.entity';
 import { PlaywrightCrawler } from '@crawlee/playwright';
+import { ElementHandle } from 'playwright';
 
 interface ScrapedCategory {
   name: string;
@@ -107,9 +108,10 @@ export class ScrapingService {
             savedCategories.push(existing);
             this.logger.log(`ℹ️ Category already exists: ${existing.name}`);
           }
-        } catch (_error) {
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
           this.logger.error(
-            `❌ Error saving category ${categoryData.name}: ${_error.message}`,
+            `❌ Error saving category ${categoryData.name}: ${errorMessage}`,
           );
         }
       }
@@ -118,10 +120,11 @@ export class ScrapingService {
         `🎉 Successfully scraped ${savedCategories.length} REAL categories from World of Books`,
       );
       return savedCategories;
-    } catch (_error) {
-      this.logger.error(`💥 Real category scraping failed: ${_error.message}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`💥 Real category scraping failed: ${errorMessage}`);
       throw new Error(
-        `Assignment requirement failed: Cannot scrape categories from World of Books. ${_error.message}`,
+        `Assignment requirement failed: Cannot scrape categories from World of Books. ${errorMessage}`,
       );
     }
   }
@@ -203,8 +206,9 @@ export class ScrapingService {
                   helpfulCount: reviewData.helpfulCount,
                   productId: saved.id,
                 });
-              } catch (_error) {
-                this.logger.warn(`⚠️ Failed to save review: ${_error.message}`);
+              } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                this.logger.warn(`⚠️ Failed to save review: ${errorMessage}`);
               }
             }
             this.logger.log(
@@ -216,9 +220,10 @@ export class ScrapingService {
           this.logger.log(
             `✅ Scraped and saved detailed product: ${productData.title}`,
           );
-        } catch (_error) {
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
           this.logger.error(
-            `❌ Error saving product ${productData.title}: ${_error.message}`,
+            `❌ Error saving product ${productData.title}: ${errorMessage}`,
           );
         }
       }
@@ -227,10 +232,11 @@ export class ScrapingService {
         `🎉 Successfully scraped ${savedProducts.length} REAL products with details from World of Books`,
       );
       return savedProducts;
-    } catch (_error) {
-      this.logger.error(`💥 Real product scraping failed: ${_error.message}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`💥 Real product scraping failed: ${errorMessage}`);
       throw new Error(
-        `Assignment requirement failed: Cannot scrape products from World of Books. ${_error.message}`,
+        `Assignment requirement failed: Cannot scrape products from World of Books. ${errorMessage}`,
       );
     }
   }
@@ -291,11 +297,12 @@ export class ScrapingService {
       }
 
       return product;
-    } catch (_error) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(
-        `💥 Failed to scrape product details: ${_error.message}`,
+        `💥 Failed to scrape product details: ${errorMessage}`,
       );
-      throw _error;
+      throw error;
     }
   }
 
@@ -360,14 +367,15 @@ export class ScrapingService {
                 }
               }
             }
-          } catch (e) {
+          } catch (_error) {
             this.logger.warn('Navigation method failed, trying alternative...');
           }
 
           this.logger.log(`🎯 Total categories found: ${categories.length}`);
-        } catch (_error) {
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
           this.logger.error(
-            `💥 Error during category scraping: ${_error.message}`,
+            `💥 Error during category scraping: ${errorMessage}`,
           );
         }
       },
@@ -393,8 +401,9 @@ export class ScrapingService {
           );
           break;
         }
-      } catch (_error) {
-        this.logger.warn(`⚠️ Failed to scrape from ${url}: ${_error.message}`);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.warn(`⚠️ Failed to scrape from ${url}: ${errorMessage}`);
       }
     }
 
@@ -445,7 +454,7 @@ export class ScrapingService {
             },
           ];
 
-          let productElements: unknown[] = [];
+          let productElements: ElementHandle[] = [];
 
           for (const strategy of productStrategies) {
             productElements = await strategy();
@@ -475,9 +484,10 @@ export class ScrapingService {
                       // Merge basic and detailed data
                       Object.assign(productData, detailedData);
                     }
-                  } catch (_error) {
+                  } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
                     this.logger.warn(
-                      `⚠️ Failed to get detailed data for ${productData.title}: ${_error.message}`,
+                      `⚠️ Failed to get detailed data for ${productData.title}: ${errorMessage}`,
                     );
                   }
                 }
@@ -487,14 +497,16 @@ export class ScrapingService {
                   `📦 Found detailed product: ${productData.title}`,
                 );
               }
-            } catch (_error) {
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
               this.logger.warn(
-                `⚠️ Error extracting product ${i}: ${_error.message}`,
+                `⚠️ Error extracting product ${i}: ${errorMessage}`,
               );
             }
           }
-        } catch (_error) {
-          this.logger.error(`💥 Error scraping products: ${_error.message}`);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          this.logger.error(`💥 Error scraping products: ${errorMessage}`);
         }
       },
       maxRequestsPerCrawl: 1,
@@ -518,8 +530,9 @@ export class ScrapingService {
           if (products.length > 0) break;
         }
       }
-    } catch (_error) {
-      this.logger.error(`💥 Product scraping failed: ${_error.message}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`💥 Product scraping failed: ${errorMessage}`);
     }
 
     this.logger.log(`📦 Total detailed products scraped: ${products.length}`);
@@ -558,7 +571,7 @@ export class ScrapingService {
                 }
               }
             }
-          } catch (e) {
+          } catch (_error) {
             /* ignore */
           }
 
@@ -579,7 +592,7 @@ export class ScrapingService {
                 }
               }
             }
-          } catch (e) {
+          } catch (_error) {
             /* ignore */
           }
 
@@ -602,7 +615,7 @@ export class ScrapingService {
                 }
               }
             }
-          } catch (e) {
+          } catch (_error) {
             /* ignore */
           }
 
@@ -634,7 +647,7 @@ export class ScrapingService {
                     const nameText = await nameEl.textContent();
                     if (nameText) review.reviewerName = nameText.trim();
                   }
-                } catch (e) {
+                } catch (_error) {
                   /* ignore */
                 }
 
@@ -652,7 +665,7 @@ export class ScrapingService {
                       }
                     }
                   }
-                } catch (e) {
+                } catch (_error) {
                   /* ignore */
                 }
 
@@ -665,7 +678,7 @@ export class ScrapingService {
                     const titleText = await titleEl.textContent();
                     if (titleText) review.reviewTitle = titleText.trim();
                   }
-                } catch (e) {
+                } catch (_error) {
                   /* ignore */
                 }
 
@@ -680,7 +693,7 @@ export class ScrapingService {
                       review.reviewText = reviewText.trim();
                     }
                   }
-                } catch (e) {
+                } catch (_error) {
                   /* ignore */
                 }
 
@@ -692,7 +705,7 @@ export class ScrapingService {
                   if (verifiedEl) {
                     review.isVerifiedPurchase = true;
                   }
-                } catch (e) {
+                } catch (_error) {
                   /* ignore */
                 }
 
@@ -708,7 +721,7 @@ export class ScrapingService {
               detailedData.reviews = reviews;
               this.logger.log(`📝 Found ${reviews.length} reviews`);
             }
-          } catch (e) {
+          } catch (_error) {
             this.logger.warn('Failed to extract reviews');
           }
 
@@ -740,7 +753,7 @@ export class ScrapingService {
                 break;
               }
             }
-          } catch (e) {
+          } catch (_error) {
             /* ignore */
           }
 
@@ -782,14 +795,15 @@ export class ScrapingService {
                 }
               }
             }
-          } catch (e) {
+          } catch (_error) {
             /* ignore */
           }
 
           this.logger.log(`✅ Extracted detailed product data`);
-        } catch (_error) {
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
           this.logger.error(
-            `💥 Error scraping detailed product data: ${_error.message}`,
+            `💥 Error scraping detailed product data: ${errorMessage}`,
           );
         }
       },
@@ -801,16 +815,17 @@ export class ScrapingService {
     try {
       await crawler.run([productUrl]);
       return detailedData;
-    } catch (_error) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(
-        `💥 Failed to scrape detailed product data: ${_error.message}`,
+        `💥 Failed to scrape detailed product data: ${errorMessage}`,
       );
       return null;
     }
   }
 
   private async extractProductData(
-    element: any,
+    element: ElementHandle,
   ): Promise<ScrapedProduct | null> {
     try {
       let title: string | null = null;
@@ -844,7 +859,7 @@ export class ScrapingService {
               break;
             }
           }
-        } catch (e) {
+        } catch (_error) {
           /* ignore */
         }
       }
@@ -872,7 +887,7 @@ export class ScrapingService {
               if (price !== null) break;
             }
           }
-        } catch (e) {
+        } catch (_error) {
           /* ignore */
         }
       }
@@ -894,7 +909,7 @@ export class ScrapingService {
               break;
             }
           }
-        } catch (e) {
+        } catch (_error) {
           /* ignore */
         }
       }
@@ -911,7 +926,7 @@ export class ScrapingService {
             imageUrl = src.startsWith('http') ? src : `${this.baseUrl}${src}`;
           }
         }
-      } catch (e) {
+      } catch (_error) {
         /* ignore */
       }
 
@@ -926,7 +941,7 @@ export class ScrapingService {
               : `${this.baseUrl}${href}`;
           }
         }
-      } catch (e) {
+      } catch (_error) {
         /* ignore */
       }
 
@@ -943,8 +958,9 @@ export class ScrapingService {
         rating: Math.round((3.5 + Math.random() * 1.5) * 10) / 10,
         reviewCount: Math.floor(Math.random() * 200) + 10,
       };
-    } catch (_error) {
-      this.logger.warn(`Error in extractProductData: ${_error.message}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.warn(`Error in extractProductData: ${errorMessage}`);
       return null;
     }
   }
