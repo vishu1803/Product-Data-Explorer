@@ -31,18 +31,43 @@ import { AppController } from './app.controller';
       inject: [ConfigService],
     }),
 
-    // ✅ FIXED: Database configuration with SSL disabled for Docker
+    // ✅ DUAL ENVIRONMENT: Supports both local Docker and Render production
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService): TypeOrmModuleOptions => {
         const nodeEnv = configService.get('NODE_ENV') || 'development';
+        const databaseUrl = configService.get('DATABASE_URL');
 
+        console.log(`🔧 Database Config - Environment: ${nodeEnv}`);
+        console.log(`🔧 DATABASE_URL provided: ${!!databaseUrl}`);
+
+        // ✅ PRODUCTION: Use Render's DATABASE_URL (handles all connection details)
+        if (nodeEnv === 'production' && databaseUrl) {
+          console.log('📡 Using production DATABASE_URL configuration');
+          return {
+            type: 'postgres',
+            url: databaseUrl,
+            entities: [Category, Product],
+            synchronize: false, // Never sync in production for safety
+            logging: false,
+            autoLoadEntities: true,
+            ssl: { rejectUnauthorized: false }, // Required for Render
+            extra: {
+              max: parseInt(configService.get('DB_MAX_CONNECTIONS') || '10', 10),
+              idleTimeoutMillis: parseInt(configService.get('DB_IDLE_TIMEOUT') || '30000', 10),
+              connectionTimeoutMillis: parseInt(configService.get('DB_CONNECTION_TIMEOUT') || '5000', 10),
+            },
+          };
+        }
+
+        // ✅ DEVELOPMENT: Use existing local Docker configuration
+        console.log('🐳 Using local Docker database configuration');
         return {
           type: 'postgres',
           host: configService.get('DB_HOST') || 'localhost',
           port: parseInt(configService.get('DB_PORT') || '5433', 10),
-          username: configService.get('DB_USERNAME') || 'postgres',
-          password: configService.get('DB_PASSWORD') || 'password',
+          username: configService.get('DB_USERNAME') || 'postgres', // Keep for local
+          password: configService.get('DB_PASSWORD') || 'postgres_admin_password', // Keep for local
           database: configService.get('DB_DATABASE') || 'product_explorer',
           entities: [Category, Product],
 
@@ -54,23 +79,14 @@ import { AppController } from './app.controller';
 
           autoLoadEntities: true,
 
-          // ✅ FIXED: SSL configuration for Docker
-          ssl: false, // Disable SSL for local Docker
-          
-          // Alternative SSL config if needed:
-          // ssl: nodeEnv === 'production' ? { rejectUnauthorized: false } : false,
+          // ✅ LOCAL: SSL disabled for local Docker
+          ssl: false,
 
           // ✅ SECURE: Connection pool settings
           extra: {
             max: parseInt(configService.get('DB_MAX_CONNECTIONS') || '20', 10),
-            idleTimeoutMillis: parseInt(
-              configService.get('DB_IDLE_TIMEOUT') || '30000',
-              10,
-            ),
-            connectionTimeoutMillis: parseInt(
-              configService.get('DB_CONNECTION_TIMEOUT') || '2000',
-              10,
-            ),
+            idleTimeoutMillis: parseInt(configService.get('DB_IDLE_TIMEOUT') || '30000', 10),
+            connectionTimeoutMillis: parseInt(configService.get('DB_CONNECTION_TIMEOUT') || '2000', 10),
           },
         };
       },
