@@ -1,4 +1,3 @@
-
 interface ErrorWithMessage {
   message: string;
   stack?: string;
@@ -97,22 +96,23 @@ export class WorldOfBooksScraper {
                         }
                       }
                     }
-                  } catch (_error) {
-                    this.logger.warn(
-                      `Error processing element: ${_error.message}`,
-                    );
+                  } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                    this.logger.warn(`Error processing element: ${errorMessage}`);
                   }
                 }
 
                 if (categories.length > 0) break; // Stop after finding categories
-              } catch (_error) {
+              } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
                 this.logger.warn(
-                  `No elements found for selector ${selector}: ${_error.message}`,
+                  `No elements found for selector ${selector}: ${errorMessage}`,
                 );
               }
             }
-          } catch (_error) {
-            this.logger.error(`Error scraping categories: ${_error.message}`);
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            this.logger.error(`Error scraping categories: ${errorMessage}`);
           }
         },
         maxRequestsPerCrawl: 3,
@@ -131,8 +131,9 @@ export class WorldOfBooksScraper {
         try {
           await crawler.run([url]);
           if (categories.length > 0) break;
-        } catch (_error) {
-          this.logger.error(`Failed to scrape ${url}: ${_error.message}`);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          this.logger.error(`Failed to scrape ${url}: ${errorMessage}`);
         }
       }
 
@@ -145,8 +146,9 @@ export class WorldOfBooksScraper {
         `Successfully scraped ${categories.length} real categories`,
       );
       return categories.slice(0, 12); // Limit to 12 categories
-    } catch (_error) {
-      this.logger.error(`Category scraping failed: ${_error.message}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Category scraping failed: ${errorMessage}`);
       return this.getFallbackCategories();
     }
   }
@@ -193,10 +195,9 @@ export class WorldOfBooksScraper {
                     if (product) {
                       products.push(product);
                     }
-                  } catch (_error) {
-                    this.logger.warn(
-                      `Error extracting product ${i}: ${_error.message}`,
-                    );
+                  } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                    this.logger.warn(`Error extracting product ${i}: ${errorMessage}`);
                   }
                 }
 
@@ -205,8 +206,9 @@ export class WorldOfBooksScraper {
                 this.logger.warn(`No products found with selector ${selector}`);
               }
             }
-          } catch (_error) {
-            this.logger.error(`Error scraping products: ${_error.message}`);
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            this.logger.error(`Error scraping products: ${errorMessage}`);
           }
         },
         maxRequestsPerCrawl: 2,
@@ -223,8 +225,9 @@ export class WorldOfBooksScraper {
 
       this.logger.log(`Successfully scraped ${products.length} real products`);
       return products;
-    } catch (_error) {
-      this.logger.error(`Product scraping failed: ${_error.message}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Product scraping failed: ${errorMessage}`);
       return this.generateSampleProducts(categoryUrl, limit);
     }
   }
@@ -264,7 +267,7 @@ export class WorldOfBooksScraper {
               break;
             }
           }
-        } catch (e) {
+        } catch (_error) {
           /* ignore */
         }
       }
@@ -280,7 +283,7 @@ export class WorldOfBooksScraper {
               if (price) break;
             }
           }
-        } catch (e) {
+        } catch (_error) {
           /* ignore */
         }
       }
@@ -296,7 +299,7 @@ export class WorldOfBooksScraper {
             imageUrl = `${this.baseUrl}${imageUrl}`;
           }
         }
-      } catch (e) {
+      } catch (_error) {
         /* ignore */
       }
 
@@ -310,7 +313,7 @@ export class WorldOfBooksScraper {
             productUrl = `${this.baseUrl}${productUrl}`;
           }
         }
-      } catch (e) {
+      } catch (_error) {
         /* ignore */
       }
 
@@ -325,7 +328,7 @@ export class WorldOfBooksScraper {
               break;
             }
           }
-        } catch (e) {
+        } catch (_error) {
           /* ignore */
         }
       }
@@ -348,8 +351,9 @@ export class WorldOfBooksScraper {
       }
 
       return null;
-    } catch (_error) {
-      this.logger.warn(`Error extracting product: ${_error.message}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.warn(`Error extracting product: ${errorMessage}`);
       return null;
     }
   }
