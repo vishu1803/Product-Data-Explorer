@@ -4,13 +4,38 @@ import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
 
-// Simple crypto polyfill
+// Enhanced crypto polyfill for Docker containers
 const cryptoModule = require('crypto');
-if (!(globalThis as any).crypto) {
-  (globalThis as any).crypto = cryptoModule.webcrypto;
+
+// Ensure crypto is available globally
+if (typeof globalThis.crypto === 'undefined') {
+  if (cryptoModule.webcrypto) {
+    globalThis.crypto = cryptoModule.webcrypto;
+  } else {
+    // Fallback for older Node.js versions
+    globalThis.crypto = {
+      randomUUID: () => cryptoModule.randomBytes(16).toString('hex'),
+      getRandomValues: (array: any) => {
+        const buffer = cryptoModule.randomBytes(array.length);
+        for (let i = 0; i < array.length; i++) {
+          array[i] = buffer[i];
+        }
+        return array;
+      },
+      webcrypto: cryptoModule.webcrypto
+    } as any;
+  }
 }
+
+// Also ensure crypto.randomUUID is available
 if (!cryptoModule.randomUUID) {
-  cryptoModule.randomUUID = () => cryptoModule.randomBytes(16).toString('hex');
+  cryptoModule.randomUUID = () => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  };
 }
 
 // Security and Rate Limiting with require (safer for now)
@@ -34,7 +59,7 @@ async function bootstrap(): Promise<void> {
   // ✅ Security headers
   app.use(
     helmet({
-      crossOriginEmbedderPolicy: false, // Allow embedding for development
+      crossOriginEmbedderPolicy: false,
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
@@ -58,10 +83,10 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  // ✅ Rate limiting for general API endpoints
+  // ✅ Rate limiting
   const generalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100,
     message: {
       error: 'Too many requests from this IP',
       message: 'Please try again after 15 minutes',
@@ -71,10 +96,9 @@ async function bootstrap(): Promise<void> {
     legacyHeaders: false,
   });
 
-  // ✅ Stricter rate limiting for scraping endpoints
   const scrapingLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000, // 5 minutes
-    max: 5, // limit scraping requests
+    windowMs: 5 * 60 * 1000,
+    max: 5,
     message: {
       error: 'Scraping rate limit exceeded',
       message: 'Please wait 5 minutes before making another scraping request',
@@ -84,11 +108,10 @@ async function bootstrap(): Promise<void> {
     legacyHeaders: false,
   });
 
-  // Apply rate limiting
   app.use(generalLimiter);
   app.use('/api/scraping', scrapingLimiter);
 
-  // ✅ Enhanced CORS with environment variables
+  // ✅ CORS configuration
   const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',')
     : [
@@ -117,9 +140,7 @@ async function bootstrap(): Promise<void> {
   if (DocumentBuilder && SwaggerModule) {
     const config = new DocumentBuilder()
       .setTitle('Product Data Explorer API')
-      .setDescription(
-        'API for managing categories and products scraped from World of Books',
-      )
+      .setDescription('API for managing categories and products scraped from World of Books')
       .setVersion('1.0')
       .addTag('categories', 'Category management endpoints')
       .addTag('products', 'Product management endpoints')
@@ -156,14 +177,10 @@ async function bootstrap(): Promise<void> {
   console.log(`🌐 CORS: Enabled for ${allowedOrigins.join(', ')}`);
 
   if (DocumentBuilder && SwaggerModule) {
-    console.log(
-      `📚 Swagger Docs available at http://localhost:${port}/api/docs`,
-    );
+    console.log(`📚 Swagger Docs available at http://localhost:${port}/api/docs`);
   }
 
-  console.log(
-    `📁 Static images: http://localhost:${port}/static/images/products/`,
-  );
+  console.log(`📁 Static images: http://localhost:${port}/static/images/products/`);
 }
 
 bootstrap().catch((error: unknown) => {

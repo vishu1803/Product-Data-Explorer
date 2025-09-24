@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -72,10 +72,10 @@ export interface Product {
   updatedAt: string;
 }
 
-// API functions
+// ✅ FIXED: Removed /api prefix since baseURL already includes it
 export const categoryApi = {
-  getAll: () => api.get<Category[]>('/api/categories'),
-  getById: (id: number) => api.get<Category>(`/api/categories/${id}`),
+  getAll: () => api.get<Category[]>('/categories'),
+  getById: (id: number) => api.get<Category>(`/categories/${id}`),
 };
 
 export const productApi = {
@@ -87,9 +87,9 @@ export const productApi = {
     if (search) params.append('search', search);
     if (sortBy) params.append('sortBy', sortBy);
     
-    return api.get(`/api/products?${params.toString()}`);
+    return api.get(`/products?${params.toString()}`);
   },
-  getById: (id: number) => api.get<Product>(`/api/products/${id}`),
+  getById: (id: number) => api.get<Product>(`/products/${id}`),
   getByCategory: (categoryId: number, page: number = 1, limit: number = 12, search?: string, sortBy?: string) => {
     const params = new URLSearchParams({
       page: page.toString(),
@@ -98,14 +98,14 @@ export const productApi = {
     if (search) params.append('search', search);
     if (sortBy) params.append('sortBy', sortBy);
     
-    return api.get(`/api/categories/${categoryId}/products?${params.toString()}`);
+    return api.get(`/categories/${categoryId}/products?${params.toString()}`);
   },
-  getReviews: (productId: number) => api.get<ProductReview[]>(`/api/products/${productId}/reviews`),
+  getReviews: (productId: number) => api.get<ProductReview[]>(`/products/${productId}/reviews`),
 };
 
-// ✅ FIXED: Added missing /api prefix to scraping endpoints
+// ✅ FIXED: Removed /api prefix since baseURL already includes it
 export const scrapingApi = {
-  scrapeCategories: () => api.post('/api/scraping/categories'),
-  scrapeProducts: (categoryId: number) => api.post(`/api/scraping/products/${categoryId}`),
-  scrapeProductDetails: (productId: number) => api.post(`/api/scraping/product-details/${productId}`),
+  scrapeCategories: () => api.post('/scraping/categories'),
+  scrapeProducts: (categoryId: number) => api.post(`/scraping/products/${categoryId}`),
+  scrapeProductDetails: (productId: number) => api.post(`/scraping/product-details/${productId}`),
 };

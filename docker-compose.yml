@@ -20,6 +20,8 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    networks:
+      - product-explorer-network
 
   # Redis Cache
   redis:
@@ -35,7 +37,80 @@ services:
       timeout: 5s
       retries: 3
     restart: unless-stopped
+    networks:
+      - product-explorer-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: product-explorer-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres_admin_password
+      DB_DATABASE: product_explorer
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      CACHE_TTL: 300
+      THROTTLE_TTL: 60
+      THROTTLE_LIMIT: 100
+      FRONTEND_URL: http://localhost:3000
+      ALLOWED_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - product-explorer-network
+    volumes:
+      - backend_uploads:/app/public
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend Web App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: product-explorer-frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+      BACKEND_URL: http://backend:3001/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - product-explorer-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 volumes:
   postgres_data:
   redis_data:
+  backend_uploads:
+
+networks:
+  product-explorer-network:
+    driver: bridge

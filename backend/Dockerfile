@@ -1,33 +1,27 @@
-# Build stage
-FROM node:18-alpine AS builder
+FROM node:20-alpine
 
 WORKDIR /app
+
+# Install dependencies
+RUN apk add --no-cache curl python3 make g++
+
+# Copy package files
 COPY package*.json ./
 RUN npm ci --only=production
 
+# Copy source and build
 COPY . .
 RUN npm run build
 
-# Production stage
-FROM node:18-alpine AS production
+# Create required directories
+RUN mkdir -p public/images/products
 
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nestjs -u 1001
+# Expose port (Render uses PORT env var)
+EXPOSE ${PORT:-3001}
 
-WORKDIR /app
+# Health check
+HEALTHCHECK --interval=60s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:${PORT:-3001}/api/health || exit 1
 
-COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
-COPY --from=builder --chown=nestjs:nodejs /app/node_modules ./node_modules
-COPY --chown=nestjs:nodejs package*.json ./
-
-USER nestjs
-
-EXPOSE 3001
-
-ENV NODE_ENV=production
-ENV PORT=3001
-
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node healthcheck.js
-
-CMD ["node", "dist/main.js"]
+# Start application
+CMD ["sh", "-c", "node dist/main"]

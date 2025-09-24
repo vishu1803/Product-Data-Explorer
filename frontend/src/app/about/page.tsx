@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen, Database, Globe, Search, Filter, Star, Users, Award, Zap, Code } from 'lucide-react';
+import { BookOpen, Database, Globe, Search, Star, Users, Award, Zap, Code } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AboutPage() {

@@ -31,24 +31,11 @@ import { AppController } from './app.controller';
       inject: [ConfigService],
     }),
 
-    // ✅ FIXED: Working database configuration with security
+    // ✅ FIXED: Database configuration with SSL disabled for Docker
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService): TypeOrmModuleOptions => {
         const nodeEnv = configService.get('NODE_ENV') || 'development';
-
-        // ✅ Validate required environment variables
-        const requiredEnvVars = [
-          'DB_HOST',
-          'DB_USERNAME',
-          'DB_PASSWORD',
-          'DB_DATABASE',
-        ];
-        for (const envVar of requiredEnvVars) {
-          if (!configService.get(envVar)) {
-            console.warn(`Warning: Missing environment variable: ${envVar}`);
-          }
-        }
 
         return {
           type: 'postgres',
@@ -67,6 +54,12 @@ import { AppController } from './app.controller';
 
           autoLoadEntities: true,
 
+          // ✅ FIXED: SSL configuration for Docker
+          ssl: false, // Disable SSL for local Docker
+          
+          // Alternative SSL config if needed:
+          // ssl: nodeEnv === 'production' ? { rejectUnauthorized: false } : false,
+
           // ✅ SECURE: Connection pool settings
           extra: {
             max: parseInt(configService.get('DB_MAX_CONNECTIONS') || '20', 10),
@@ -79,9 +72,6 @@ import { AppController } from './app.controller';
               10,
             ),
           },
-
-          // ✅ SECURE: SSL for production with proper typing
-          ssl: nodeEnv === 'production' ? { rejectUnauthorized: false } : false,
         };
       },
       inject: [ConfigService],

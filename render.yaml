@@ -1,0 +1,68 @@
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: product-explorer-db
+    env: docker
+    plan: free
+    dockerfilePath: ./postgres.Dockerfile
+    envVars:
+      - key: POSTGRES_DB
+        value: product_explorer
+      - key: POSTGRES_USER
+        value: postgres
+      - key: POSTGRES_PASSWORD
+        generateValue: true
+
+  # Redis Cache
+  - type: redis
+    name: product-explorer-redis
+    plan: free
+
+  # Backend API
+  - type: web
+    name: product-explorer-backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DATABASE_URL
+        fromService:
+          name: product-explorer-db
+          type: pserv
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: product-explorer-redis
+          type: redis
+          property: connectionString
+      - key: FRONTEND_URL
+        fromService:
+          name: product-explorer-frontend
+          type: web
+          property: host
+      - key: ALLOWED_ORIGINS
+        fromService:
+          name: product-explorer-frontend
+          type: web
+          property: host
+
+  # Frontend Web App
+  - type: web
+    name: product-explorer-frontend
+    env: docker
+    dockerfilePath: ./frontend/Dockerfile
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          name: product-explorer-backend
+          type: web
+          property: host
+        concat: "/api"
