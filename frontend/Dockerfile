@@ -2,10 +2,10 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files FIRST (before npm install)
 COPY package*.json ./
 
-# Install dependencies
+# THEN install dependencies
 RUN npm install
 
 # Copy source code
