@@ -56,6 +56,9 @@ try {
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // ✅ ADDED: Trust proxy for Render deployment (fixes rate limiting warnings)
+  app.set('trust proxy', true);
+
   // ✅ AUTO-CREATE DATABASE TABLES (NEW ADDITION)
   try {
     console.log('🔄 Checking database schema synchronization...');
