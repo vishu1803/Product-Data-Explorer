@@ -25,11 +25,20 @@ services:
     dockerfilePath: ./backend/Dockerfile
     plan: free
     healthCheckPath: /api/health
+    # ✅ ADDED: Memory optimization and build settings
+    buildCommand: "npm run build"
+    startCommand: "node --max_old_space_size=512 dist/main"
+    scaling:
+      minInstances: 1
+      maxInstances: 1
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 3001
+      # ✅ ADDED: Memory optimization
+      - key: NODE_OPTIONS
+        value: "--max_old_space_size=512"
       - key: DATABASE_URL
         fromService:
           name: product-explorer-db
@@ -40,16 +49,11 @@ services:
           name: product-explorer-redis
           type: redis
           property: connectionString
+      # ✅ FIXED: Use full HTTPS URL format
       - key: FRONTEND_URL
-        fromService:
-          name: product-explorer-frontend
-          type: web
-          property: host
+        value: https://product-explorer-frontend-qp3m.onrender.com
       - key: ALLOWED_ORIGINS
-        fromService:
-          name: product-explorer-frontend
-          type: web
-          property: host
+        value: https://product-explorer-frontend-qp3m.onrender.com,https://product-explorer-frontend-qp3m.onrender.com
 
   # Frontend Web App
   - type: web
@@ -57,12 +61,20 @@ services:
     env: docker
     dockerfilePath: ./frontend/Dockerfile
     plan: free
+    # ✅ ADDED: Memory optimization and build settings
+    buildCommand: "npm run build"
+    startCommand: "npm start"
+    scaling:
+      minInstances: 1
+      maxInstances: 1
     envVars:
       - key: NODE_ENV
         value: production
+      # ✅ ADDED: Frontend memory optimization
+      - key: NODE_OPTIONS
+        value: "--max_old_space_size=512"
+      # ✅ FIXED: Use full HTTPS URL format
       - key: NEXT_PUBLIC_API_URL
-        fromService:
-          name: product-explorer-backend
-          type: web
-          property: host
-        concat: "/api"
+        value: https://product-explorer-backend-eaj3.onrender.com/api
+      - key: NEXT_PUBLIC_BASE_URL
+        value: https://product-explorer-frontend-qp3m.onrender.com

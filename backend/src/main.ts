@@ -54,12 +54,46 @@ try {
 }
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // ✅ ADDED: Memory optimization for production
+  if (process.env.NODE_ENV === 'production') {
+    // Set Node.js memory limits
+    if (!process.env.NODE_OPTIONS) {
+      process.env.NODE_OPTIONS = '--max_old_space_size=512';
+    }
+    
+    // Enable garbage collection optimization
+    if (global.gc) {
+      setInterval(() => {
+        global.gc();
+      }, 30000); // Run GC every 30 seconds
+    }
+  }
 
-  // ✅ ADDED: Trust proxy for Render deployment (fixes rate limiting warnings)
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    logger: process.env.NODE_ENV === 'production' ? ['error', 'warn'] : undefined
+  });
+
+  // ✅ Trust proxy for Render deployment
   app.set('trust proxy', true);
 
-  // ✅ AUTO-CREATE DATABASE TABLES (NEW ADDITION)
+  // ✅ ADDED: Graceful shutdown handling
+  const gracefulShutdown = async (signal: string) => {
+    console.log(`🛑 ${signal} received, shutting down gracefully...`);
+    try {
+      await app.close();
+      console.log('✅ Application closed successfully');
+      process.exit(0);
+    } catch (error) {
+      console.error('❌ Error during shutdown:', error);
+      process.exit(1);
+    }
+  };
+
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  process.on('SIGUSR2', () => gracefulShutdown('SIGUSR2')); // For Render
+
+  // ✅ AUTO-CREATE DATABASE TABLES
   try {
     console.log('🔄 Checking database schema synchronization...');
     const { DataSource } = require('typeorm');
@@ -106,10 +140,10 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  // ✅ Rate limiting
+  // ✅ REDUCED Rate limiting for free tier
   const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100,
+    max: 50, // ✅ REDUCED from 100 to 50
     message: {
       error: 'Too many requests from this IP',
       message: 'Please try again after 15 minutes',
@@ -120,11 +154,11 @@ async function bootstrap(): Promise<void> {
   });
 
   const scrapingLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
-    max: 5,
+    windowMs: 10 * 60 * 1000, // ✅ INCREASED window from 5 to 10 minutes
+    max: 3, // ✅ REDUCED from 5 to 3
     message: {
       error: 'Scraping rate limit exceeded',
-      message: 'Please wait 5 minutes before making another scraping request',
+      message: 'Please wait 10 minutes before making another scraping request',
       statusCode: 429,
     },
     standardHeaders: true,
@@ -138,6 +172,7 @@ async function bootstrap(): Promise<void> {
   const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',')
     : [
+        'https://product-explorer-frontend-qp3m.onrender.com', // ✅ ADDED: Your frontend URL
         process.env.FRONTEND_URL || 'http://localhost:3000',
         'http://localhost:3002',
         'http://127.0.0.1:3000',
@@ -159,8 +194,8 @@ async function bootstrap(): Promise<void> {
   // Global API prefix
   app.setGlobalPrefix('api');
 
-  // Setup Swagger if available
-  if (DocumentBuilder && SwaggerModule) {
+  // ✅ SIMPLIFIED Swagger setup for production
+  if (DocumentBuilder && SwaggerModule && process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
       .setTitle('Product Data Explorer API')
       .setDescription('API for managing categories and products scraped from World of Books')
@@ -199,7 +234,7 @@ async function bootstrap(): Promise<void> {
   console.log(`🔒 Security: Rate limiting and input validation enabled`);
   console.log(`🌐 CORS: Enabled for ${allowedOrigins.join(', ')}`);
 
-  if (DocumentBuilder && SwaggerModule) {
+  if (DocumentBuilder && SwaggerModule && process.env.NODE_ENV !== 'production') {
     console.log(`📚 Swagger Docs available at http://localhost:${port}/api/docs`);
   }
 
