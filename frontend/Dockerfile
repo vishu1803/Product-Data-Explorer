@@ -5,8 +5,8 @@ WORKDIR /app
 # Copy package files FIRST (before npm install)
 COPY package*.json ./
 
-# Install dependencies (use ci for production)
-RUN npm ci --only=production --silent
+# Install ALL dependencies (including devDependencies for build)
+RUN npm ci --silent
 
 # Copy source code
 COPY . .
@@ -15,8 +15,11 @@ COPY . .
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Build the application
+# Build the application (TypeScript is now available)
 RUN npm run build
+
+# NOW clean up devDependencies after build
+RUN npm ci --only=production --silent && npm cache clean --force
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
@@ -28,12 +31,8 @@ RUN chown -R nextjs:nodejs /app
 # Switch to non-root user
 USER nextjs
 
-# Expose port (Render uses process.env.PORT, but 3000 is good default)
+# Expose port
 EXPOSE 3000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/ || exit 1
 
 # Start the application
 CMD ["npm", "start"]
