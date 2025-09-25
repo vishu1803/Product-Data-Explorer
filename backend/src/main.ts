@@ -56,6 +56,26 @@ try {
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // ✅ AUTO-CREATE DATABASE TABLES (NEW ADDITION)
+  try {
+    console.log('🔄 Checking database schema synchronization...');
+    const { DataSource } = require('typeorm');
+    const dataSource = app.get(DataSource);
+    
+    if (process.env.NODE_ENV === 'production') {
+      console.log('🔄 Synchronizing database schema for production...');
+      await dataSource.synchronize();
+      console.log('✅ Database schema synchronized successfully');
+    } else {
+      console.log('🔄 Running database migrations for development...');
+      await dataSource.runMigrations();
+      console.log('✅ Database migrations completed successfully');
+    }
+  } catch (error) {
+    console.error('❌ Database schema setup failed:', error);
+    console.log('⚠️  Continuing without schema sync - manual setup may be required');
+  }
+
   // ✅ Security headers
   app.use(
     helmet({

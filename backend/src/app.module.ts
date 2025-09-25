@@ -48,7 +48,7 @@ import { AppController } from './app.controller';
             type: 'postgres',
             url: databaseUrl,
             entities: [Category, Product],
-            synchronize: false, // Never sync in production for safety
+            synchronize: true, // ✅ CHANGED: Allow table creation in production
             logging: false,
             autoLoadEntities: true,
             ssl: { rejectUnauthorized: false }, // Required for Render
