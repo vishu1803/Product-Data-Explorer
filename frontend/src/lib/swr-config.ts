@@ -1,7 +1,7 @@
 import useSWR from 'swr';
+import { API_BASE_URL } from '@/config/api';
 
-// Get the API base URL from environment variables
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+
 
 // SWR fetcher function
 const fetcher = (url: string) => fetch(url).then((res) => res.json());

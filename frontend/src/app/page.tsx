@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { categoryApi, scrapingApi, Category } from '@/lib/api';
 import { RefreshCw, Database, Globe, AlertCircle, CheckCircle } from 'lucide-react';
+import { debugEnvVars } from '@/config/api';
 
 interface ApiError {
   message: string;
@@ -10,6 +11,10 @@ interface ApiError {
 }
 
 export default function Home() {
+ useEffect(() => {
+    // Debug environment variables (remove after fixing)
+    debugEnvVars();
+  }, []);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [scraping, setScraping] = useState(false);
