@@ -73,33 +73,37 @@ export class ScrapingService {
     private reviewRepository: Repository<ProductReview>,
   ) {}
 
-  // ✅ ADDED: Production-optimized browser configuration
+  // ✅ FIXED: Correct PlaywrightCrawler configuration
   private getBrowserConfig() {
     const isProduction = process.env.NODE_ENV === 'production';
     
     const config = {
       headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--disable-extensions',
-        '--no-first-run',
-        '--disable-default-apps',
-        '--disable-features=TranslateUI',
-        '--disable-ipc-flooding-protection',
-        '--disable-background-timer-throttling',
-        '--disable-renderer-backgrounding',
-        '--disable-backgrounding-occluded-windows',
-        '--disable-web-security',
-        '--disable-features=VizDisplayCompositor',
-      ] as string[],
+      // ✅ FIXED: Use launchOptions for Playwright browser configuration
+      launchOptions: {
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--disable-extensions',
+          '--no-first-run',
+          '--disable-default-apps',
+          '--disable-features=TranslateUI',
+          '--disable-ipc-flooding-protection',
+          '--disable-background-timer-throttling',
+          '--disable-renderer-backgrounding',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor',
+        ],
+        // ✅ FIXED: Set executable path in production only
+        ...(isProduction && { executablePath: '/usr/bin/chromium-browser' })
+      }
     };
 
-    // ✅ Use system Chromium in production (Docker container)
     if (isProduction) {
-      config['executablePath'] = '/usr/bin/chromium-browser';
       this.logger.log('🐳 Using system Chromium browser in production');
     } else {
       this.logger.log('🛠️ Using Playwright default browser in development');
@@ -348,7 +352,7 @@ export class ScrapingService {
 
     const categories: ScrapedCategory[] = [];
 
-    // ✅ UPDATED: Use production-optimized browser config
+    // ✅ FIXED: Use correct browser configuration
     const browserConfig = this.getBrowserConfig();
     
     const crawler = new PlaywrightCrawler({
@@ -419,7 +423,7 @@ export class ScrapingService {
       },
       maxRequestsPerCrawl: 2,
       requestHandlerTimeoutSecs: 60,
-      // ✅ UPDATED: Apply browser configuration
+      // ✅ FIXED: Apply browser configuration using spread operator
       ...browserConfig,
     });
 
@@ -457,7 +461,7 @@ export class ScrapingService {
 
     const products: ScrapedProduct[] = [];
 
-    // ✅ UPDATED: Use production-optimized browser config
+    // ✅ FIXED: Use correct browser configuration
     const browserConfig = this.getBrowserConfig();
     
     const crawler = new PlaywrightCrawler({
@@ -553,7 +557,7 @@ export class ScrapingService {
       },
       maxRequestsPerCrawl: 1,
       requestHandlerTimeoutSecs: 60,
-      // ✅ UPDATED: Apply browser configuration  
+      // ✅ FIXED: Apply browser configuration  
       ...browserConfig,
     });
 
@@ -589,7 +593,7 @@ export class ScrapingService {
 
     const detailedData: Partial<ScrapedProduct> = {};
 
-    // ✅ UPDATED: Use production-optimized browser config
+    // ✅ FIXED: Use correct browser configuration
     const browserConfig = this.getBrowserConfig();
     
     const crawler = new PlaywrightCrawler({
@@ -855,7 +859,7 @@ export class ScrapingService {
       },
       maxRequestsPerCrawl: 1,
       requestHandlerTimeoutSecs: 30,
-      // ✅ UPDATED: Apply browser configuration
+      // ✅ FIXED: Apply browser configuration
       ...browserConfig,
     });
 
