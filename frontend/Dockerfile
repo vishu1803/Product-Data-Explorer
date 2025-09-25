@@ -5,7 +5,7 @@ WORKDIR /app
 # Copy package files FIRST (before npm install)
 COPY package*.json ./
 
-# Install ALL dependencies (including devDependencies for build)
+# ✅ FIXED: Install ALL dependencies (including TypeScript)
 RUN npm ci --silent
 
 # Copy source code
@@ -18,7 +18,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Build the application (TypeScript is now available)
 RUN npm run build
 
-# NOW clean up devDependencies after build
+# ✅ CLEAN UP: Remove devDependencies AFTER build
 RUN npm ci --only=production --silent && npm cache clean --force
 
 # Create non-root user for security

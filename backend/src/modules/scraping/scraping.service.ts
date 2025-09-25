@@ -73,6 +73,41 @@ export class ScrapingService {
     private reviewRepository: Repository<ProductReview>,
   ) {}
 
+  // ✅ ADDED: Production-optimized browser configuration
+  private getBrowserConfig() {
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    const config = {
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--disable-extensions',
+        '--no-first-run',
+        '--disable-default-apps',
+        '--disable-features=TranslateUI',
+        '--disable-ipc-flooding-protection',
+        '--disable-background-timer-throttling',
+        '--disable-renderer-backgrounding',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-web-security',
+        '--disable-features=VizDisplayCompositor',
+      ] as string[],
+    };
+
+    // ✅ Use system Chromium in production (Docker container)
+    if (isProduction) {
+      config['executablePath'] = '/usr/bin/chromium-browser';
+      this.logger.log('🐳 Using system Chromium browser in production');
+    } else {
+      this.logger.log('🛠️ Using Playwright default browser in development');
+    }
+
+    return config;
+  }
+
   async scrapeCategories(): Promise<Category[]> {
     this.logger.log(
       '🔍 Starting REAL category scraping from World of Books...',
@@ -313,6 +348,9 @@ export class ScrapingService {
 
     const categories: ScrapedCategory[] = [];
 
+    // ✅ UPDATED: Use production-optimized browser config
+    const browserConfig = this.getBrowserConfig();
+    
     const crawler = new PlaywrightCrawler({
       requestHandler: async ({ page, request }) => {
         this.logger.log(`🌐 Visiting: ${request.url}`);
@@ -380,8 +418,9 @@ export class ScrapingService {
         }
       },
       maxRequestsPerCrawl: 2,
-      headless: true,
       requestHandlerTimeoutSecs: 60,
+      // ✅ UPDATED: Apply browser configuration
+      ...browserConfig,
     });
 
     const urlsToTry = [
@@ -418,6 +457,9 @@ export class ScrapingService {
 
     const products: ScrapedProduct[] = [];
 
+    // ✅ UPDATED: Use production-optimized browser config
+    const browserConfig = this.getBrowserConfig();
+    
     const crawler = new PlaywrightCrawler({
       requestHandler: async ({ page, request }) => {
         try {
@@ -510,8 +552,9 @@ export class ScrapingService {
         }
       },
       maxRequestsPerCrawl: 1,
-      headless: true,
       requestHandlerTimeoutSecs: 60,
+      // ✅ UPDATED: Apply browser configuration  
+      ...browserConfig,
     });
 
     try {
@@ -546,6 +589,9 @@ export class ScrapingService {
 
     const detailedData: Partial<ScrapedProduct> = {};
 
+    // ✅ UPDATED: Use production-optimized browser config
+    const browserConfig = this.getBrowserConfig();
+    
     const crawler = new PlaywrightCrawler({
       requestHandler: async ({ page, request }) => {
         try {
@@ -808,8 +854,9 @@ export class ScrapingService {
         }
       },
       maxRequestsPerCrawl: 1,
-      headless: true,
       requestHandlerTimeoutSecs: 30,
+      // ✅ UPDATED: Apply browser configuration
+      ...browserConfig,
     });
 
     try {
