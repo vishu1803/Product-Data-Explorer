@@ -2,10 +2,10 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package files FIRST (before npm install)
+# Copy package files FIRST
 COPY package*.json ./
 
-# ✅ FIXED: Install ALL dependencies (including TypeScript)
+# Install ALL dependencies
 RUN npm ci --silent
 
 # Copy source code
@@ -15,17 +15,17 @@ COPY . .
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Build the application (TypeScript is now available)
+# Build the application
 RUN npm run build
 
-# ✅ CLEAN UP: Remove devDependencies AFTER build
-RUN npm ci --only=production --silent && npm cache clean --force
+# ✅ DON'T remove dependencies - keep them for runtime
+# (Slightly larger image, but more reliable)
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
 
-# Change ownership of the app directory
+# Change ownership
 RUN chown -R nextjs:nodejs /app
 
 # Switch to non-root user
