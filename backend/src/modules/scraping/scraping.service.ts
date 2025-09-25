@@ -73,43 +73,22 @@ export class ScrapingService {
     private reviewRepository: Repository<ProductReview>,
   ) {}
 
-  // ✅ FIXED: Correct PlaywrightCrawler configuration
+  // ✅ SIMPLEST FIX: Remove browser config completely
   private getBrowserConfig() {
     const isProduction = process.env.NODE_ENV === 'production';
-    
-    const config = {
-      headless: true,
-      // ✅ FIXED: Use launchOptions for Playwright browser configuration
-      launchOptions: {
-        headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-gpu',
-          '--disable-extensions',
-          '--no-first-run',
-          '--disable-default-apps',
-          '--disable-features=TranslateUI',
-          '--disable-ipc-flooding-protection',
-          '--disable-background-timer-throttling',
-          '--disable-renderer-backgrounding',
-          '--disable-backgrounding-occluded-windows',
-          '--disable-web-security',
-          '--disable-features=VizDisplayCompositor',
-        ],
-        // ✅ FIXED: Set executable path in production only
-        ...(isProduction && { executablePath: '/usr/bin/chromium-browser' })
-      }
-    };
 
     if (isProduction) {
       this.logger.log('🐳 Using system Chromium browser in production');
+      // Set environment variable for system browser
+      process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = '/usr/bin/chromium-browser';
     } else {
       this.logger.log('🛠️ Using Playwright default browser in development');
     }
 
-    return config;
+    // ✅ RETURN MINIMAL CONFIG - let PlaywrightCrawler handle everything
+    return {
+      headless: true
+    };
   }
 
   async scrapeCategories(): Promise<Category[]> {
@@ -352,7 +331,7 @@ export class ScrapingService {
 
     const categories: ScrapedCategory[] = [];
 
-    // ✅ FIXED: Use correct browser configuration
+    // ✅ SIMPLE: Use minimal browser configuration
     const browserConfig = this.getBrowserConfig();
     
     const crawler = new PlaywrightCrawler({
@@ -423,7 +402,7 @@ export class ScrapingService {
       },
       maxRequestsPerCrawl: 2,
       requestHandlerTimeoutSecs: 60,
-      // ✅ FIXED: Apply browser configuration using spread operator
+      // ✅ SIMPLE: Only apply minimal config
       ...browserConfig,
     });
 
@@ -461,7 +440,7 @@ export class ScrapingService {
 
     const products: ScrapedProduct[] = [];
 
-    // ✅ FIXED: Use correct browser configuration
+    // ✅ SIMPLE: Use minimal browser configuration
     const browserConfig = this.getBrowserConfig();
     
     const crawler = new PlaywrightCrawler({
@@ -557,7 +536,7 @@ export class ScrapingService {
       },
       maxRequestsPerCrawl: 1,
       requestHandlerTimeoutSecs: 60,
-      // ✅ FIXED: Apply browser configuration  
+      // ✅ SIMPLE: Apply minimal configuration
       ...browserConfig,
     });
 
@@ -593,7 +572,7 @@ export class ScrapingService {
 
     const detailedData: Partial<ScrapedProduct> = {};
 
-    // ✅ FIXED: Use correct browser configuration
+    // ✅ SIMPLE: Use minimal browser configuration
     const browserConfig = this.getBrowserConfig();
     
     const crawler = new PlaywrightCrawler({
@@ -859,7 +838,7 @@ export class ScrapingService {
       },
       maxRequestsPerCrawl: 1,
       requestHandlerTimeoutSecs: 30,
-      // ✅ FIXED: Apply browser configuration
+      // ✅ SIMPLE: Apply minimal configuration
       ...browserConfig,
     });
 
