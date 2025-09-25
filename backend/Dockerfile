@@ -1,4 +1,5 @@
-FROM node:18-alpine
+# Use Node 20 instead of 18 (required by NestJS 11+)
+FROM node:20-alpine
 
 # Install system dependencies for Playwright
 RUN apk add --no-cache \
@@ -9,9 +10,10 @@ RUN apk add --no-cache \
     harfbuzz \
     ca-certificates \
     ttf-freefont \
-    git
+    git \
+    curl
 
-# Set Puppeteer/Playwright to use installed Chromium
+# Set browser paths for Playwright/Puppeteer
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
     PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser \
@@ -26,11 +28,11 @@ WORKDIR /app
 # Copy package files first (better Docker layer caching)
 COPY package*.json ./
 
-# Install all dependencies (including devDependencies for build)
+# Install dependencies
 RUN npm ci
 
-# Install Playwright browsers (do this before copying code)
-RUN npx playwright install chromium --with-deps
+# Don't install Playwright browsers separately - use system chromium
+# RUN npx playwright install chromium --with-deps  <- REMOVED
 
 # Copy application code
 COPY . .
@@ -44,19 +46,23 @@ USER nestjs
 # Build the application
 RUN npm run build
 
-# Clean up dev dependencies to reduce image size
+# Switch back to root for cleanup
 USER root
+# Clean up dev dependencies
 RUN npm ci --only=production && npm cache clean --force
-USER nestjs
 
 # Create necessary directories
-RUN mkdir -p public/images/products
+RUN mkdir -p public/images/products && \
+    chown -R nestjs:nodejs /app
+
+# Switch back to non-root user
+USER nestjs
 
 # Expose port
 EXPOSE 3001
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:3001/api/health || exit 1
 
 # Start the application
