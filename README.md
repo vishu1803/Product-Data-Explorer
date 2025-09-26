@@ -1,5 +1,3 @@
-<img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" style="height:64px;margin-right:32px"/>
-
 
 # Product Data Explorer
 
@@ -306,9 +304,7 @@ product-data-explorer/
 4. Push to branch: `git push origin feature-name`
 5. Submit a pull request
 
-## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🐛 Known Issues
 
@@ -340,7 +336,3 @@ For support and questions:
 - **NestJS Team** for the excellent framework
 - **Next.js Team** for the React framework
 - **Render** for reliable hosting platform
-```
-
-
-
