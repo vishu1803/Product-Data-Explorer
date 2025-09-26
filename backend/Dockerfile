@@ -1,63 +1,70 @@
-# Use Node 20 Alpine (most reliable for minimal containers)
-FROM node:20-alpine
+FROM node:20-slim
 
-# Install only essential system dependencies
-RUN apk add --no-cache \
-    chromium \
-    nss \
-    freetype \
-    harfbuzz \
+# Update package list and install dependencies
+RUN apt-get update && apt-get install -y \
+    wget \
+    gnupg \
     ca-certificates \
-    ttf-freefont \
-    curl \
-    dumb-init
+    procps \
+    libxss1 \
+    && wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
+    && apt-get update \
+    && apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf libxss1 \
+      --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
 
-# ✅ CORRECTED: Set proper Alpine Linux browser paths
+# Alternative: If Google Chrome fails, use Chromium
+# RUN apt-get update && apt-get install -y \
+#     chromium-browser \
+#     fonts-liberation \
+#     libasound2 \
+#     libatk-bridge2.0-0 \
+#     libdrm2 \
+#     libgtk-3-0 \
+#     libnss3 \
+#     xvfb \
+#     && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables for browser
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
-    PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable \
+    PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/google-chrome-stable \
     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
-    CHROME_BIN=/usr/bin/chromium \
-    CHROME_PATH=/usr/bin/chromium \
-    NODE_OPTIONS="--max_old_space_size=512"
+    CHROME_BIN=/usr/bin/google-chrome-stable \
+    CHROME_PATH=/usr/bin/google-chrome-stable \
+    NODE_OPTIONS="--max_old_space_size=1024"
 
-# Set working directory
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --silent
+RUN npm ci
 
-# Copy application code
+# Copy application code  
 COPY . .
 
-# Build the application
+# Build application
 RUN npm run build
 
-# Clean up dev dependencies (keep only production)
-RUN npm ci --only=production --silent && \
-    npm cache clean --force
+# Clean up dev dependencies
+RUN npm prune --production
 
-# Create necessary directories
+# Create directories
 RUN mkdir -p public/images/products
 
-# Add non-root user for security (but simpler approach)
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nestjs -u 1001 && \
-    chown -R nestjs:nodejs /app
+# Add user for running the application
+RUN groupadd -r nodejs && useradd -r -g nodejs nodejs
+RUN chown -R nodejs:nodejs /app
+USER nodejs
 
-# Switch to non-root user
-USER nestjs
-
-# Expose port
 EXPOSE 3001
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:3001/api/health || exit 1
 
-# Start application with memory limit
-ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "--max_old_space_size=512", "dist/main"]
+# Start with optimized memory
+CMD ["node", "--max_old_space_size=1024", "dist/main"]

@@ -73,22 +73,45 @@ export class ScrapingService {
     private reviewRepository: Repository<ProductReview>,
   ) {}
 
-  // ✅ SIMPLEST FIX: Remove browser config completely
+  // ✅ UPDATED: Fixed browser configuration for Docker container
   private getBrowserConfig() {
     const isProduction = process.env.NODE_ENV === 'production';
 
     if (isProduction) {
-      this.logger.log('🐳 Using system Chromium browser in production');
-      // Set environment variable for system browser
-      process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = '/usr/bin/chromium-browser';
+      this.logger.log('🐳 Using Google Chrome in production container');
+      
+      // Set all browser environment variables
+      process.env.PUPPETEER_EXECUTABLE_PATH = '/usr/bin/google-chrome-stable';
+      process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = '/usr/bin/google-chrome-stable';
+      process.env.CHROME_BIN = '/usr/bin/google-chrome-stable';
+      
+      return {
+        headless: true,
+        launchOptions: {
+          executablePath: '/usr/bin/google-chrome-stable',
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process',
+            '--disable-gpu',
+            '--disable-background-timer-throttling',
+            '--disable-backgrounding-occluded-windows',
+            '--disable-renderer-backgrounding',
+            '--disable-features=TranslateUI',
+            '--disable-extensions'
+          ]
+        }
+      };
     } else {
       this.logger.log('🛠️ Using Playwright default browser in development');
+      return {
+        headless: true
+      };
     }
-
-    // ✅ RETURN MINIMAL CONFIG - let PlaywrightCrawler handle everything
-    return {
-      headless: true
-    };
   }
 
   async scrapeCategories(): Promise<Category[]> {
@@ -331,7 +354,7 @@ export class ScrapingService {
 
     const categories: ScrapedCategory[] = [];
 
-    // ✅ SIMPLE: Use minimal browser configuration
+    // ✅ UPDATED: Use proper browser configuration
     const browserConfig = this.getBrowserConfig();
     
     const crawler = new PlaywrightCrawler({
@@ -339,57 +362,97 @@ export class ScrapingService {
         this.logger.log(`🌐 Visiting: ${request.url}`);
 
         try {
-          await page.waitForLoadState('domcontentloaded', { timeout: 15000 });
-          await page.waitForTimeout(2000);
+          // ✅ IMPROVED: Better page loading with explicit navigation
+          await page.goto(request.url, { 
+            waitUntil: 'domcontentloaded', 
+            timeout: 30000 
+          });
+          await page.waitForTimeout(3000);
 
           this.logger.log('🔎 Searching for category navigation...');
 
-          try {
-            await page.waitForSelector('nav, header, .navigation, .menu', {
-              timeout: 10000,
-            });
-
-            const navLinks = await page.$$eval(
-              'nav a, header a, .navigation a, .menu a',
-              (links) =>
-                links
-                  .map((link) => ({
-                    text: link.textContent?.trim() || '',
-                    href: link.getAttribute('href') || '',
-                  }))
-                  .filter((link) => link.text && link.href),
-            );
-
-            this.logger.log(`Found ${navLinks.length} navigation links`);
-
-            for (const link of navLinks.slice(0, 30)) {
-              if (this.isBookCategory(link.text, link.href)) {
-                const categoryName = this.cleanCategoryName(link.text);
-                if (
-                  categoryName &&
-                  categoryName.length > 2 &&
-                  categoryName.length < 50
-                ) {
-                  const categoryUrl = link.href.startsWith('http')
-                    ? link.href
-                    : `${this.baseUrl}${link.href}`;
-
-                  const exists = categories.some(
-                    (cat) => cat.name === categoryName,
+          // ✅ ENHANCED: Multiple navigation detection strategies
+          const navigationStrategies = [
+            // Strategy 1: Standard navigation
+            async () => {
+              await page.waitForSelector('nav, header, .navigation, .menu', { timeout: 10000 });
+              return await page.$$eval(
+                'nav a, header a, .navigation a, .menu a',
+                (links) => links.map((link) => ({
+                  text: link.textContent?.trim() || '',
+                  href: link.getAttribute('href') || '',
+                })).filter((link) => link.text && link.href)
+              );
+            },
+            // Strategy 2: Category-specific links
+            async () => {
+              return await page.$$eval(
+                'a[href*="category"], a[href*="genre"], a[href*="books"]',
+                (links) => links.map((link) => ({
+                  text: link.textContent?.trim() || '',
+                  href: link.getAttribute('href') || '',
+                })).filter((link) => link.text && link.href)
+              );
+            },
+            // Strategy 3: Book-related text links
+            async () => {
+              return await page.$$eval(
+                'a',
+                (links) => links.map((link) => ({
+                  text: link.textContent?.trim() || '',
+                  href: link.getAttribute('href') || '',
+                })).filter((link) => {
+                  const text = link.text.toLowerCase();
+                  return link.text && link.href && (
+                    text.includes('fiction') || text.includes('mystery') || 
+                    text.includes('romance') || text.includes('biography') ||
+                    text.includes('science') || text.includes('history') ||
+                    text.includes('children') || text.includes('young')
                   );
-                  if (!exists) {
-                    categories.push({
-                      name: categoryName,
-                      slug: this.generateSlug(categoryName),
-                      url: categoryUrl,
-                      description: `Real ${categoryName} books from World of Books`,
-                    });
-                  }
+                })
+              );
+            }
+          ];
+
+          let navLinks: any[] = [];
+          
+          for (const strategy of navigationStrategies) {
+            try {
+              navLinks = await strategy();
+              if (navLinks.length > 0) {
+                this.logger.log(`Found ${navLinks.length} links using navigation strategy`);
+                break;
+              }
+            } catch (strategyError) {
+              continue;
+            }
+          }
+
+          for (const link of navLinks.slice(0, 30)) {
+            if (this.isBookCategory(link.text, link.href)) {
+              const categoryName = this.cleanCategoryName(link.text);
+              if (
+                categoryName &&
+                categoryName.length > 2 &&
+                categoryName.length < 50
+              ) {
+                const categoryUrl = link.href.startsWith('http')
+                  ? link.href
+                  : `${this.baseUrl}${link.href}`;
+
+                const exists = categories.some(
+                  (cat) => cat.name === categoryName,
+                );
+                if (!exists) {
+                  categories.push({
+                    name: categoryName,
+                    slug: this.generateSlug(categoryName),
+                    url: categoryUrl,
+                    description: `Real ${categoryName} books from World of Books`,
+                  });
                 }
               }
             }
-          } catch (_error) {
-            this.logger.warn('Navigation method failed, trying alternative...');
           }
 
           this.logger.log(`🎯 Total categories found: ${categories.length}`);
@@ -400,9 +463,9 @@ export class ScrapingService {
           );
         }
       },
-      maxRequestsPerCrawl: 2,
+      maxRequestsPerCrawl: 1,
       requestHandlerTimeoutSecs: 60,
-      // ✅ SIMPLE: Only apply minimal config
+      // ✅ UPDATED: Apply proper browser configuration
       ...browserConfig,
     });
 
@@ -440,13 +503,17 @@ export class ScrapingService {
 
     const products: ScrapedProduct[] = [];
 
-    // ✅ SIMPLE: Use minimal browser configuration
+    // ✅ UPDATED: Use proper browser configuration
     const browserConfig = this.getBrowserConfig();
     
     const crawler = new PlaywrightCrawler({
       requestHandler: async ({ page, request }) => {
         try {
-          await page.waitForLoadState('domcontentloaded', { timeout: 15000 });
+          // ✅ IMPROVED: Better page loading
+          await page.goto(request.url, { 
+            waitUntil: 'domcontentloaded', 
+            timeout: 30000 
+          });
           await page.waitForTimeout(3000);
 
           this.logger.log('🔎 Searching for product elements...');
@@ -536,7 +603,7 @@ export class ScrapingService {
       },
       maxRequestsPerCrawl: 1,
       requestHandlerTimeoutSecs: 60,
-      // ✅ SIMPLE: Apply minimal configuration
+      // ✅ UPDATED: Apply proper browser configuration
       ...browserConfig,
     });
 
@@ -572,13 +639,16 @@ export class ScrapingService {
 
     const detailedData: Partial<ScrapedProduct> = {};
 
-    // ✅ SIMPLE: Use minimal browser configuration
+    // ✅ UPDATED: Use proper browser configuration
     const browserConfig = this.getBrowserConfig();
     
     const crawler = new PlaywrightCrawler({
       requestHandler: async ({ page, request }) => {
         try {
-          await page.waitForLoadState('domcontentloaded', { timeout: 15000 });
+          await page.goto(request.url, { 
+            waitUntil: 'domcontentloaded', 
+            timeout: 30000 
+          });
           await page.waitForTimeout(3000);
 
           // Extract detailed description
@@ -838,7 +908,7 @@ export class ScrapingService {
       },
       maxRequestsPerCrawl: 1,
       requestHandlerTimeoutSecs: 30,
-      // ✅ SIMPLE: Apply minimal configuration
+      // ✅ UPDATED: Apply proper browser configuration
       ...browserConfig,
     });
 
@@ -1125,7 +1195,7 @@ export class ScrapingService {
     const formats = [
       'Paperback',
       'Hardcover',
-      'Mass Market Paperback',
+      'Mass Market Paperbook',
       'Trade Paperback',
     ];
     return formats[Math.floor(Math.random() * formats.length)];
