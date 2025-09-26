@@ -73,43 +73,25 @@ export class ScrapingService {
     private reviewRepository: Repository<ProductReview>,
   ) {}
 
-  // ✅ FIXED: Correct PlaywrightCrawler configuration
+  // ✅ FIXED: Only return headless config - let PlaywrightCrawler handle browser setup
   private getBrowserConfig() {
     const isProduction = process.env.NODE_ENV === 'production';
 
     if (isProduction) {
-      this.logger.log('🐳 Using Google Chrome in production container');
+      this.logger.log('🐳 Setting browser environment variables for production');
       
       // Set browser environment variables
       process.env.PUPPETEER_EXECUTABLE_PATH = '/usr/bin/google-chrome-stable';
       process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = '/usr/bin/google-chrome-stable';
       process.env.CHROME_BIN = '/usr/bin/google-chrome-stable';
-      
-      // ✅ NO launchOptions - use browserPoolOptions instead
-      return {
-        headless: true,
-        browserPoolOptions: {
-          launchOptions: {
-            executablePath: '/usr/bin/google-chrome-stable',
-            args: [
-              '--no-sandbox',
-              '--disable-setuid-sandbox',
-              '--disable-dev-shm-usage',
-              '--disable-accelerated-2d-canvas',
-              '--no-first-run',
-              '--no-zygote',
-              '--single-process',
-              '--disable-gpu'
-            ]
-          }
-        }
-      };
     } else {
       this.logger.log('🛠️ Using Playwright default browser in development');
-      return {
-        headless: true
-      };
     }
+
+    // ✅ ONLY return headless option - no complex browser config
+    return {
+      headless: true
+    };
   }
 
   async scrapeCategories(): Promise<Category[]> {
@@ -355,6 +337,7 @@ export class ScrapingService {
     try {
       const browserConfig = this.getBrowserConfig();
       
+      // ✅ SIMPLIFIED: Only use basic PlaywrightCrawler options
       const crawler = new PlaywrightCrawler({
         requestHandler: async ({ page, request }) => {
           this.logger.log(`🌐 Visiting: ${request.url}`);
@@ -368,6 +351,7 @@ export class ScrapingService {
 
             this.logger.log('🔎 Searching for category navigation...');
 
+            // Multiple strategies to find navigation links
             const navigationStrategies = [
               async () => {
                 await page.waitForSelector('nav, header, .navigation, .menu', { timeout: 10000 });
@@ -457,9 +441,9 @@ export class ScrapingService {
           }
         },
         maxRequestsPerCrawl: 1,
-        requestHandlerTimeoutSecs: 60,
-        // ✅ SPREAD OPERATOR: Apply browser configuration
-        ...browserConfig,
+        requestHandlerTimeoutSecs: 30,
+        // ✅ ONLY APPLY HEADLESS OPTION
+        headless: browserConfig.headless,
       });
 
       const urlsToTry = [
@@ -491,7 +475,6 @@ export class ScrapingService {
     }
   }
 
-  // Keep all your existing helper methods unchanged...
   private async scrapeRealProducts(categoryUrl: string, categoryName: string): Promise<ScrapedProduct[]> {
     this.logger.log(`📦 Product scraping temporarily simplified for stability`);
     return [];
@@ -636,7 +619,7 @@ export class ScrapingService {
     const formats = [
       'Paperback',
       'Hardcover',
-      'Mass Market Paperback',
+      'Mass Market Paperbook',
       'Trade Paperback',
     ];
     return formats[Math.floor(Math.random() * formats.length)];
