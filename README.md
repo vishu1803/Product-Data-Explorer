@@ -342,5 +342,5 @@ For support and questions:
 - **Render** for reliable hosting platform
 ```
 
-**This README includes everything about your project and can be copied directly into your repository!** 🚀💪
+
 
