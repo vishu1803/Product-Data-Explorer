@@ -11,10 +11,9 @@ import { Product } from '../products/product.entity';
 import { ProductReview } from '../products/product-review.entity';
 import { PlaywrightCrawler } from '@crawlee/playwright';
 import { ElementHandle } from 'playwright';
-// ✅ FIXED: Correct imports
+// ✅ FIXED: Correct Cheerio imports without CheerioAPI type
 import axios from 'axios';
 import { load } from 'cheerio';
-import { type Cheerio, type AnyNode } from 'cheerio';
 
 interface ScrapedCategory {
   name: string;
@@ -119,7 +118,7 @@ export class ScrapingService {
     return [];
   }
 
-  // ✅ FIXED: Playwright scraping with correct return type
+  // Playwright scraping with correct return type
   private async scrapeWithPlaywright(url: string, type: string): Promise<any[]> {
     const isProduction = process.env.NODE_ENV === 'production';
     
@@ -127,7 +126,6 @@ export class ScrapingService {
     let scrapedResults: any[] = [];
     
     const crawler = new PlaywrightCrawler({
-      // ✅ FIXED: requestHandler returns void, store results externally
       requestHandler: async ({ page, request }) => {
         this.logger.log(`🌐 Playwright scraping: ${request.url}`);
         
@@ -146,7 +144,6 @@ export class ScrapingService {
         } catch (error) {
           this.logger.error(`❌ Playwright page error: ${error.message}`);
         }
-        // ✅ FIXED: Return void (nothing)
       },
       maxRequestsPerCrawl: 1,
       requestHandlerTimeoutSecs: 30,
@@ -176,7 +173,7 @@ export class ScrapingService {
     return scrapedResults;
   }
 
-  // ✅ FIXED: HTTP-based scraping with correct CheerioAPI type
+  // ✅ FIXED: HTTP-based scraping without CheerioAPI type
   private async scrapeWithHttp(url: string, type: string): Promise<any[]> {
     this.logger.log(`🌐 HTTP scraping: ${url}`);
     
@@ -188,7 +185,7 @@ export class ScrapingService {
         timeout: 15000
       });
 
-      // ✅ FIXED: Use load function correctly
+      // ✅ FIXED: Use load function and infer the type
       const $ = load(response.data);
       
       if (type === 'categories') {
@@ -202,8 +199,8 @@ export class ScrapingService {
     }
   }
 
-  // ✅ FIXED: Correct CheerioAPI parameter type
-  private extractCategoriesFromHtml($: Cheerio): ScrapedCategory[] {
+  // ✅ FIXED: Use inferred type instead of explicit CheerioAPI
+  private extractCategoriesFromHtml($: ReturnType<typeof load>): ScrapedCategory[] {
     const categories: ScrapedCategory[] = [];
     
     $('nav a, header a, .navigation a, .menu a').each((i, element) => {
@@ -232,8 +229,8 @@ export class ScrapingService {
     return categories.slice(0, 8);
   }
 
-  // ✅ FIXED: Correct CheerioAPI parameter type
-  private extractProductsFromHtml($: Cheerio): ScrapedProduct[] {
+  // ✅ FIXED: Use inferred type instead of explicit CheerioAPI
+  private extractProductsFromHtml($: ReturnType<typeof load>): ScrapedProduct[] {
     const products: ScrapedProduct[] = [];
     
     $('.product, .book, .item, [class*="product"], [class*="book"]').each((i, element) => {
@@ -409,7 +406,7 @@ export class ScrapingService {
     return product; // Simplified for now
   }
 
-  // ✅ PLACEHOLDER: Playwright page extraction methods
+  // Placeholder: Playwright page extraction methods
   private async extractCategoriesFromPage(page: any): Promise<ScrapedCategory[]> {
     // For now, return empty array - can implement later when browser works
     this.logger.log('📦 Playwright category extraction - placeholder');
