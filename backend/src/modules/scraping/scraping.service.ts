@@ -14,7 +14,7 @@ import { ElementHandle } from 'playwright';
 // ✅ FIXED: Correct imports
 import axios from 'axios';
 import { load } from 'cheerio';
-import type { CheerioAPI } from 'cheerio';
+import { type Cheerio, type AnyNode } from 'cheerio';
 
 interface ScrapedCategory {
   name: string;
@@ -203,7 +203,7 @@ export class ScrapingService {
   }
 
   // ✅ FIXED: Correct CheerioAPI parameter type
-  private extractCategoriesFromHtml($: CheerioAPI): ScrapedCategory[] {
+  private extractCategoriesFromHtml($: Cheerio): ScrapedCategory[] {
     const categories: ScrapedCategory[] = [];
     
     $('nav a, header a, .navigation a, .menu a').each((i, element) => {
@@ -233,7 +233,7 @@ export class ScrapingService {
   }
 
   // ✅ FIXED: Correct CheerioAPI parameter type
-  private extractProductsFromHtml($: CheerioAPI): ScrapedProduct[] {
+  private extractProductsFromHtml($: Cheerio): ScrapedProduct[] {
     const products: ScrapedProduct[] = [];
     
     $('.product, .book, .item, [class*="product"], [class*="book"]').each((i, element) => {
