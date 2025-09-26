@@ -1,124 +1,346 @@
-# ��� Product Data Explorer
+<img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" style="height:64px;margin-right:32px"/>
 
-A full-stack web application for scraping and exploring product data from World of Books.
 
-## ��� Project Overview
+# Product Data Explorer
 
-This is a comprehensive web application that demonstrates:
-- Full-stack development with NestJS and Next.js
-- Web scraping capabilities using Crawlee and Playwright
-- Modern database design with PostgreSQL
-- Advanced frontend features with search, filtering, and sorting
-- Responsive UI design with Tailwind CSS
+A full-stack web application that scrapes and displays book data from World of Books, built with NestJS backend and Next.js frontend.
 
-## ✨ Features
+## 🚀 Live Demo
 
-### Core Functionality
-- ��� **Web Scraping**: Automated data collection from World of Books
-- ��� **Product Catalog**: Browse books organized by categories
-- ��� **Advanced Search**: Real-time search across titles, authors, and categories
-- ��� **Responsive Design**: Works on all devices and screen sizes
-- ⚡ **Performance**: Fast loading with pagination and optimized queries
+- **Frontend:** [https://product-explorer-frontend-qp3m.onrender.com](https://product-explorer-frontend-qp3m.onrender.com)
+- **Backend API:** [https://product-explorer-backend-eaj3.onrender.com/api](https://product-explorer-backend-eaj3.onrender.com/api)
+- **API Documentation:** [https://product-explorer-backend-eaj3.onrender.com/api/docs](https://product-explorer-backend-eaj3.onrender.com/api/docs)
 
-### Advanced Features
-- ��� **Modern UI**: Professional design with Tailwind CSS v4
-- ��� **Sort & Filter**: Multiple sorting options and filtering capabilities
-- ��� **View Modes**: Toggle between grid and list layouts
-- ��� **Animations**: Smooth transitions and loading states
-- ��� **Smart Search**: Intelligent search with result highlighting
+## 📋 Features
 
-## ��� Technology Stack
+### Backend (NestJS)
+- **Real-time Web Scraping:** Scrapes categories and products from World of Books using Playwright + Cheerio fallback
+- **RESTful API:** Complete CRUD operations for categories and products
+- **Database Integration:** PostgreSQL with TypeORM for data persistence
+- **Caching:** Redis integration for improved performance
+- **Rate Limiting:** Protection against excessive API calls
+- **API Documentation:** Swagger/OpenAPI documentation
+- **Docker Support:** Containerized deployment ready
+
+### Frontend (Next.js)
+- **Modern UI:** Responsive design with Tailwind CSS
+- **Server-Side Rendering:** Optimized performance with Next.js
+- **Real-time Data:** Live scraping integration with backend
+- **Product Browsing:** Category-based product exploration
+- **Search & Filter:** Advanced product filtering capabilities
+- **Image Optimization:** Next.js Image component for optimized loading
+
+### Key Functionality
+- **Category Management:** Browse book categories scraped from World of Books
+- **Product Discovery:** View detailed product information including prices, authors, and descriptions
+- **Real-time Scraping:** On-demand data scraping with caching for performance
+- **Review System:** Product reviews and ratings display
+- **Responsive Design:** Mobile-first approach with modern UI
+
+## 🛠️ Tech Stack
 
 ### Backend
-- **NestJS**: Modern Node.js framework with TypeScript
-- **PostgreSQL**: Robust relational database
-- **TypeORM**: Object-Relational Mapping for database operations
-- **Crawlee + Playwright**: Web scraping and automation
+- **Framework:** NestJS (Node.js)
+- **Database:** PostgreSQL
+- **ORM:** TypeORM
+- **Caching:** Redis
+- **Web Scraping:** Playwright + Cheerio
+- **Validation:** Class-validator
+- **Documentation:** Swagger/OpenAPI
+- **Containerization:** Docker
 
 ### Frontend
-- **Next.js 13+**: React framework with App Router
-- **TypeScript**: Type-safe JavaScript
-- **Tailwind CSS v4**: Modern utility-first CSS framework
-- **Lucide React**: Beautiful icon library
+- **Framework:** Next.js 14 (React)
+- **Styling:** Tailwind CSS
+- **HTTP Client:** Axios
+- **Image Optimization:** Next.js Image
+- **Deployment:** Docker + Static Export
 
-## ��� Getting Started
+### Infrastructure
+- **Hosting:** Render
+- **Database:** PostgreSQL (Render)
+- **Cache:** Redis (Render)
+- **CI/CD:** Git-based deployment
+
+## 🏗️ Architecture
+
+```
+
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Next.js       │    │    NestJS       │    │   PostgreSQL    │
+│   Frontend      │◄──►│   Backend       │◄──►│   Database      │
+│                 │    │                 │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+│
+▼
+┌─────────────────┐
+│     Redis       │
+│     Cache       │
+└─────────────────┘
+│
+▼
+┌─────────────────┐
+│  World of Books │
+│   (Scraping)    │
+└─────────────────┘
+
+```
+
+## 📦 Installation
 
 ### Prerequisites
-- Node.js 18 or higher
-- Docker and Docker Compose
+- Node.js 20+
+- Docker & Docker Compose
 - Git
 
-### Installation Steps
+### Local Development Setup
 
-1. **Clone the repository**
-git clone <repository-url>
+1. **Clone the repository:**
+```
+
+git clone <your-repo-url>
 cd product-data-explorer
-2. **Start the database**
-docker-compose up -d
-3. **Setup Backend**
+
+```
+
+2. **Backend Setup:**
+```
+
 cd backend
 npm install
+cp .env.example .env
+
+# Edit .env with your database credentials
+
 npm run start:dev
 
-4. **Setup Frontend** (open new terminal)
+```
+
+3. **Frontend Setup:**
+```
+
 cd frontend
 npm install
+cp .env.local.example .env.local
+
+# Edit .env.local with your backend URL
+
 npm run dev
-5. **Access the application**
+
+```
+
+4. **Database Setup:**
+```
+
+
+# The application will auto-create tables on first run
+
+# Or run migrations manually:
+
+npm run migration:run
+
+```
+
+### Docker Development
+
+1. **Start all services:**
+```
+
+docker-compose up -d
+
+```
+
+2. **Access the application:**
 - Frontend: http://localhost:3000
-- Backend API: http://localhost:3001
+- Backend: http://localhost:3001
+- API Docs: http://localhost:3001/api/docs
 
-## ��� Usage Guide
+## 🚀 Deployment
 
-1. **Initialize Data**: Visit home page and click "Scrape Categories"
-2. **Browse Categories**: Navigate to Categories page to explore different genres
-3. **View Products**: Click any category to see products within that category
-4. **Scrape Products**: Use "Scrape Products" button to populate product data
-5. **Search & Filter**: Use the search bar and filters to find specific items
-Structure of project
+### Render Deployment (Recommended)
+
+The application is configured for automatic deployment on Render using Docker.
+
+1. **Fork this repository**
+
+2. **Create Render services:**
+   - PostgreSQL database
+   - Redis cache
+   - Backend web service (Docker)
+   - Frontend web service (Docker)
+
+3. **Configure environment variables** (see Environment Variables section)
+
+4. **Deploy** using Git-based deployment
+
+### Environment Variables
+
+#### Backend (.env)
+```
+
+NODE_ENV=production
+PORT=3001
+DATABASE_URL=postgresql://user:password@host:port/database
+REDIS_URL=redis://host:port
+FRONTEND_URL=https://your-frontend-url
+ALLOWED_ORIGINS=https://your-frontend-url
+
+```
+
+#### Frontend (.env.local)
+```
+
+NODE_ENV=production
+NEXT_PUBLIC_API_URL=https://your-backend-url/api
+NEXT_PUBLIC_BASE_URL=https://your-frontend-url
+
+```
+
+## 📚 API Documentation
+
+### REST Endpoints
+
+#### Categories
+- `GET /api/categories` - Get all categories
+- `GET /api/categories/:id` - Get category by ID
+- `GET /api/categories/:id/products` - Get products in category
+
+#### Products
+- `GET /api/products` - Get all products
+- `GET /api/products/:id` - Get product by ID
+- `GET /api/products/search` - Search products
+
+#### Scraping
+- `POST /api/scraping/categories` - Scrape categories from World of Books
+- `POST /api/scraping/products/:categoryId` - Scrape products for category
+- `POST /api/scraping/product-details/:productId` - Get detailed product info
+
+### Response Format
+```
+
+{
+"success": true,
+"data": [...],
+"message": "Success",
+"pagination": {
+"page": 1,
+"limit": 10,
+"total": 100
+}
+}
+
+```
+
+## 🧪 Testing
+
+### Backend Testing
+```
+
+cd backend
+npm run test
+npm run test:e2e
+
+```
+
+### Frontend Testing
+```
+
+cd frontend
+npm run test
+npm run test:e2e
+
+```
+
+## 🔧 Development
+
+### Project Structure
+```
+
 product-data-explorer/
-├── .git/                 # Git repository (only here!)
-├── .gitignore           # Root gitignore
-├── README.md            # Project documentation
-├── docker-compose.yml   # Database setup
-├── backend/             # NestJS backend
+├── backend/
 │   ├── src/
-│   ├── package.json
-│   ├── .gitignore      # Backend gitignore
-│   └── .env.example    # Backend env example
-└── frontend/           # Next.js frontend
-    ├── src/
-    ├── package.json
-    ├── .gitignore      # Frontend gitignore
-    └── .env.local.example
+│   │   ├── modules/
+│   │   │   ├── categories/
+│   │   │   ├── products/
+│   │   │   └── scraping/
+│   │   ├── app.module.ts
+│   │   └── main.ts
+│   ├── Dockerfile
+│   └── package.json
+├── frontend/
+│   ├── src/
+│   │   ├── app/
+│   │   ├── components/
+│   │   └── lib/
+│   ├── Dockerfile
+│   └── package.json
+├── docker-compose.yml
+└── README.md
 
+```
 
-## ��� Key Features Showcase
+### Key Features Implementation
 
-- **Professional UI**: Modern, clean interface design
-- **Real-time Search**: Instant search results as you type
-- **Responsive Layout**: Perfect on desktop, tablet, and mobile
-- **Advanced Filtering**: Sort by price, rating, date, or alphabetically
-- **Smooth Animations**: Professional loading states and transitions
+#### Web Scraping
+- **Dual Strategy:** Playwright (primary) + Cheerio (fallback)
+- **Caching:** 5-minute cache for scraped data
+- **Error Handling:** Graceful fallback between scraping methods
+- **Rate Limiting:** Prevents excessive scraping
 
-## ��� Assignment Requirements Met
+#### Database Schema
+- **Categories:** id, name, slug, description, worldOfBooksUrl
+- **Products:** id, title, author, price, description, categoryId, etc.
+- **Reviews:** id, productId, rating, reviewText, reviewerName, etc.
 
-✅ Full-stack application (NestJS + Next.js)  
-✅ Database integration (PostgreSQL)  
-✅ Web scraping implementation  
-✅ Responsive frontend design  
-✅ API communication between frontend and backend  
-✅ Modern development practices and clean code  
+#### Performance Optimizations
+- **Caching:** Redis for frequently accessed data
+- **Database:** Optimized queries with TypeORM
+- **Frontend:** Next.js static generation and image optimization
+- **Docker:** Multi-stage builds for smaller images
 
-## ���‍��� Developer
+## 🤝 Contributing
 
-Built as part of a Full-Stack Web Development assignment to demonstrate:
-- Modern web development skills
-- Full-stack architecture understanding
-- Database design and implementation
-- Web scraping and data management
-- Professional UI/UX design
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Commit changes: `git commit -m 'Add feature'`
+4. Push to branch: `git push origin feature-name`
+5. Submit a pull request
 
----
+## 📝 License
 
-**⭐ This project showcases production-ready code quality and modern web development practices.**
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🐛 Known Issues
+
+- **Browser Dependencies:** Playwright requires additional system dependencies in production
+- **Memory Limits:** Optimized for free-tier hosting with 512MB RAM limit
+- **Rate Limiting:** World of Books scraping is rate-limited to prevent blocking
+
+## 🔮 Future Enhancements
+
+- [ ] User authentication and favorites
+- [ ] Advanced search with filters
+- [ ] Price tracking and alerts
+- [ ] Book recommendations
+- [ ] Mobile app (React Native)
+- [ ] GraphQL API
+- [ ] Elasticsearch integration
+- [ ] Advanced analytics dashboard
+
+## 📞 Support
+
+For support and questions:
+- Create an issue on GitHub
+- Check the API documentation at `/api/docs`
+- Review the troubleshooting section in deployment logs
+
+## 🙏 Acknowledgments
+
+- **World of Books** for providing book data
+- **NestJS Team** for the excellent framework
+- **Next.js Team** for the React framework
+- **Render** for reliable hosting platform
+```
+
+**This README includes everything about your project and can be copied directly into your repository!** 🚀💪
+
