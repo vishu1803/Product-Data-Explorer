@@ -74,7 +74,7 @@ async function bootstrap(): Promise<void> {
   });
 
   // ✅ Trust proxy for Render deployment
-  app.set('trust proxy', true);
+ app.set('trust proxy', ['127.0.0.1', '::1', '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16']);
 
   // ✅ ADDED: Graceful shutdown handling
   const gracefulShutdown = async (signal: string) => {
