@@ -11,9 +11,10 @@ import { Product } from '../products/product.entity';
 import { ProductReview } from '../products/product-review.entity';
 import { PlaywrightCrawler } from '@crawlee/playwright';
 import { ElementHandle } from 'playwright';
-// ✅ ADDED: For HTTP fallback
+// ✅ FIXED: Correct imports
 import axios from 'axios';
-import * as cheerio from 'cheerio';
+import { load } from 'cheerio';
+import type { CheerioAPI } from 'cheerio';
 
 interface ScrapedCategory {
   name: string;
@@ -67,7 +68,7 @@ export class ScrapingService {
   private readonly logger = new Logger(ScrapingService.name);
   private readonly baseUrl = 'https://www.worldofbooks.com';
   
-  // ✅ ADDED: Cache for real-time scraping
+  // Cache for real-time scraping
   private readonly scrapingCache = new Map<string, { data: any; timestamp: number }>();
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
@@ -80,7 +81,7 @@ export class ScrapingService {
     private reviewRepository: Repository<ProductReview>,
   ) {}
 
-  // ✅ ADDED: Real-time scraping method
+  // Real-time scraping method
   async scrapeRealTime(url: string, type: 'categories' | 'products'): Promise<any> {
     const cacheKey = `${type}-${url}`;
     const cached = this.scrapingCache.get(cacheKey);
@@ -118,11 +119,15 @@ export class ScrapingService {
     return [];
   }
 
-  // ✅ IMPROVED: Playwright scraping with better configuration
+  // ✅ FIXED: Playwright scraping with correct return type
   private async scrapeWithPlaywright(url: string, type: string): Promise<any[]> {
     const isProduction = process.env.NODE_ENV === 'production';
     
+    // Store results outside the crawler
+    let scrapedResults: any[] = [];
+    
     const crawler = new PlaywrightCrawler({
+      // ✅ FIXED: requestHandler returns void, store results externally
       requestHandler: async ({ page, request }) => {
         this.logger.log(`🌐 Playwright scraping: ${request.url}`);
         
@@ -134,19 +139,19 @@ export class ScrapingService {
           await page.waitForTimeout(2000);
 
           if (type === 'categories') {
-            return await this.extractCategoriesFromPage(page);
+            scrapedResults = await this.extractCategoriesFromPage(page);
           } else {
-            return await this.extractProductsFromPage(page);
+            scrapedResults = await this.extractProductsFromPage(page);
           }
         } catch (error) {
           this.logger.error(`❌ Playwright page error: ${error.message}`);
-          return [];
         }
+        // ✅ FIXED: Return void (nothing)
       },
       maxRequestsPerCrawl: 1,
       requestHandlerTimeoutSecs: 30,
       headless: true,
-      // ✅ PRODUCTION: Use system Chrome
+      // Production browser config
       ...(isProduction && {
         launchContext: {
           useChrome: true,
@@ -166,14 +171,12 @@ export class ScrapingService {
       })
     });
 
-    const results: any[] = [];
-    
     await crawler.run([url]);
     
-    return results;
+    return scrapedResults;
   }
 
-  // ✅ NEW: HTTP-based scraping fallback
+  // ✅ FIXED: HTTP-based scraping with correct CheerioAPI type
   private async scrapeWithHttp(url: string, type: string): Promise<any[]> {
     this.logger.log(`🌐 HTTP scraping: ${url}`);
     
@@ -185,7 +188,8 @@ export class ScrapingService {
         timeout: 15000
       });
 
-      const $ = cheerio.load(response.data);
+      // ✅ FIXED: Use load function correctly
+      const $ = load(response.data);
       
       if (type === 'categories') {
         return this.extractCategoriesFromHtml($);
@@ -198,8 +202,8 @@ export class ScrapingService {
     }
   }
 
-  // ✅ NEW: Extract categories from Cheerio HTML
-  private extractCategoriesFromHtml($: cheerio.CheerioAPI): ScrapedCategory[] {
+  // ✅ FIXED: Correct CheerioAPI parameter type
+  private extractCategoriesFromHtml($: CheerioAPI): ScrapedCategory[] {
     const categories: ScrapedCategory[] = [];
     
     $('nav a, header a, .navigation a, .menu a').each((i, element) => {
@@ -228,8 +232,8 @@ export class ScrapingService {
     return categories.slice(0, 8);
   }
 
-  // ✅ NEW: Extract products from Cheerio HTML
-  private extractProductsFromHtml($: cheerio.CheerioAPI): ScrapedProduct[] {
+  // ✅ FIXED: Correct CheerioAPI parameter type
+  private extractProductsFromHtml($: CheerioAPI): ScrapedProduct[] {
     const products: ScrapedProduct[] = [];
     
     $('.product, .book, .item, [class*="product"], [class*="book"]').each((i, element) => {
@@ -268,7 +272,7 @@ export class ScrapingService {
     return products.slice(0, 10);
   }
 
-  // ✅ UPDATED: Use real-time scraping
+  // Use real-time scraping
   async scrapeCategories(): Promise<Category[]> {
     this.logger.log('🔍 Starting REAL-TIME category scraping from World of Books...');
 
@@ -319,7 +323,7 @@ export class ScrapingService {
     }
   }
 
-  // ✅ UPDATED: Use real-time scraping for products
+  // Use real-time scraping for products
   async scrapeProducts(categoryId: number): Promise<Product[]> {
     this.logger.log(`🔍 Starting REAL-TIME product scraping for category ${categoryId}...`);
 
@@ -405,17 +409,20 @@ export class ScrapingService {
     return product; // Simplified for now
   }
 
-  // Helper methods remain the same...
+  // ✅ PLACEHOLDER: Playwright page extraction methods
   private async extractCategoriesFromPage(page: any): Promise<ScrapedCategory[]> {
-    // Implementation for Playwright page extraction
+    // For now, return empty array - can implement later when browser works
+    this.logger.log('📦 Playwright category extraction - placeholder');
     return [];
   }
 
   private async extractProductsFromPage(page: any): Promise<ScrapedProduct[]> {
-    // Implementation for Playwright page extraction  
+    // For now, return empty array - can implement later when browser works
+    this.logger.log('📦 Playwright product extraction - placeholder');
     return [];
   }
 
+  // Helper methods remain the same
   private isBookCategory(text: string, href: string): boolean {
     const bookKeywords = [
       'fiction', 'non-fiction', 'mystery', 'romance', 'thriller', 'science',
@@ -507,7 +514,7 @@ export class ScrapingService {
   }
 
   private getRandomFormat(): string {
-    const formats = ['Paperbook', 'Hardcover', 'Mass Market Paperback', 'Trade Paperback'];
+    const formats = ['Paperback', 'Hardcover', 'Mass Market Paperback', 'Trade Paperback'];
     return formats[Math.floor(Math.random() * formats.length)];
   }
 }
