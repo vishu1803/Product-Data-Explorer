@@ -4,7 +4,7 @@ import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
 
-// Enhanced crypto polyfill for Docker containers
+
 const cryptoModule = require('crypto');
 
 // Ensure crypto is available globally
