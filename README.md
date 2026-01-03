@@ -333,6 +333,4 @@ For support and questions:
 ## 🙏 Acknowledgments
 
 - **World of Books** for providing book data
-- **NestJS Team** for the excellent framework
-- **Next.js Team** for the React framework
-- **Render** for reliable hosting platform
+
