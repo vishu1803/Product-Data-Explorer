@@ -323,12 +323,7 @@ product-data-explorer/
 - [ ] Elasticsearch integration
 - [ ] Advanced analytics dashboard
 
-## 📞 Support
 
-For support and questions:
-- Create an issue on GitHub
-- Check the API documentation at `/api/docs`
-- Review the troubleshooting section in deployment logs
 
 ## 🙏 Acknowledgments
 
