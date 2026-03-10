@@ -306,11 +306,7 @@ product-data-explorer/
 
 
 
-## 🐛 Known Issues
-
-- **Browser Dependencies:** Playwright requires additional system dependencies in production
-- **Memory Limits:** Optimized for free-tier hosting with 512MB RAM limit
-- **Rate Limiting:** World of Books scraping is rate-limited to prevent blocking
+ World of Books scraping is rate-limited to prevent blocking
 
 ## 🔮 Future Enhancements
 
