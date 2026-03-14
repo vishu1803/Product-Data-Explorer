@@ -296,13 +296,7 @@ product-data-explorer/
 - **Frontend:** Next.js static generation and image optimization
 - **Docker:** Multi-stage builds for smaller images
 
-## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Commit changes: `git commit -m 'Add feature'`
-4. Push to branch: `git push origin feature-name`
-5. Submit a pull request
 
 
 
