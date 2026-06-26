@@ -8,7 +8,6 @@ A full-stack web application that scrapes and displays book data from World of B
 - **Frontend:** [https://product-explorer-frontend-qp3m.onrender.com](https://product-explorer-frontend-qp3m.onrender.com)
 - **Backend API:** [https://product-explorer-backend-eaj3.onrender.com/api](https://product-explorer-backend-eaj3.onrender.com/api)
 - **API Documentation:** [https://product-explorer-backend-eaj3.onrender.com/api/docs](https://product-explorer-backend-eaj3.onrender.com/api/docs)
-
 ## 📋 Features
 
 ### Backend (NestJS)
