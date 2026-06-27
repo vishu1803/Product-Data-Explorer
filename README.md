@@ -94,7 +94,6 @@ A full-stack web application that scrapes and displays book data from World of B
 
 1. **Clone the repository:**
 ```
-
 git clone <your-repo-url>
 cd product-data-explorer
 
