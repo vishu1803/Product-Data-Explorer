@@ -7,7 +7,6 @@ A full-stack web application that scrapes and displays book data from World of B
 - **Backend API:** [https://product-explorer-backend-eaj3.onrender.com/api](https://product-explorer-backend-eaj3.onrender.com/api)
 - **API Documentation:** [https://product-explorer-backend-eaj3.onrender.com/api/docs](https://product-explorer-backend-eaj3.onrender.com/api/docs)
 ## 📋 Features
-
 ### Backend (NestJS)
 - **Real-time Web Scraping:** Scrapes categories and products from World of Books using Playwright + Cheerio fallback
 - **RESTful API:** Complete CRUD operations for categories and products
