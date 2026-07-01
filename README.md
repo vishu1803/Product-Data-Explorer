@@ -1,6 +1,5 @@
 
 # Product Data Explorer
-
 A full-stack web application that scrapes and displays book data from World of Books, built with NestJS backend and Next.js frontend.
 ## 🚀 Live Demo
 - **Frontend:** [https://product-explorer-frontend-qp3m.onrender.com](https://product-explorer-frontend-qp3m.onrender.com)
